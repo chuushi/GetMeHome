@@ -1,0 +1,38 @@
+# # # # # # # # # # # # # # #
+#  GetMeHome Configuration  #
+#    (Future Plugin Link)   #
+
+###
+# Home storage settings
+storage:
+#
+
+# type - Format to save homes as. Possible values:
+# YAML    Save it as homes.yml file. Good for small servers.
+# SQLite  Save it as homes.db file.
+# MySQL   Save it on a MySQL database. Ideal for huge player base.
+    type: YAML
+  
+# YAML-only:
+# savename - should the plugin save player names with their UUID?
+    savename: true
+  
+# MySQL-only:
+    database: minecraft
+    username: username
+    password: password
+    table: gmh_homes
+
+
+###
+# Home Limits
+limit:
+#
+
+# default - default home limit. 1 means only home named
+#             "default" is allowed.
+    default: 1
+# The rest of the home limit goes in this format:
+# permission node: maximum number of homes
+# example:
+    gmh.twohomes: 2
