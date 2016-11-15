@@ -48,7 +48,7 @@ public final class HereIsYourHome extends JavaPlugin {
 		// TODO: Database stuff
 		/*
 		try {
-			db = new HomeDB("", "", "");
+			db = new HomeSQL("", "", "");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			getLogger().warning("Database driver does not exist. Is Java up to date?");
@@ -68,7 +68,7 @@ public final class HereIsYourHome extends JavaPlugin {
 	
 	@Override
 	public void onDisable() {
-	    storage.save();
+	    storage.onDisable();
 	}
 	
 	private Location getHome(Player p, String n) {

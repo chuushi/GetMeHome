@@ -29,7 +29,7 @@ final class HomeYAML extends HomeStorage {
     }
     
     @Override
-    void save() {
+    void onDisable() {
     	try {
 			hc.save(homeFile);
 		} catch (IOException e) {

@@ -10,14 +10,14 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-final class HomeDB extends HomeStorage {
+final class HomeSQL extends HomeStorage {
 	// TODO: WORK IN PROGRESS
 	private static final String SQL_GET = "SELECT ";
 	private static final String SQL_SET = "UPDATE";
 	private static final String SQL_NEW = "UPDATE";
 	private final Connection db;
 	
-	HomeDB(final String url, final String username, final String password) throws ClassNotFoundException, SQLException {
+	HomeSQL(final String url, final String username, final String password) throws ClassNotFoundException, SQLException {
 		
 		// Start the database
 		if (username == null) {
@@ -41,7 +41,7 @@ final class HomeDB extends HomeStorage {
 	}
 
 	@Override
-	void save() {
+	void onDisable() {
 		// TODO Auto-generated method stub
 		
 	}
