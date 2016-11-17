@@ -15,8 +15,8 @@ final class HomeSQL extends HomeStorage {
 	/*
 	 * The tables:
 	 *
-	 * Homes: uuid, homename, world, x, y, z, yaw, pitch, deleteflag
-	 * Players: uuid, name, homesset
+	 * Homes: rowid, pid, homename, world, x, y, z, yaw, pitch, deleteflag
+	 * Players: rowid, name, uuid, homesset
 	 *
 	 */
 	private static final String SQL_GET = "SELECT ";

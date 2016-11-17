@@ -15,6 +15,7 @@ storage:
   
 # YAML-only:
 # savename - should the plugin save player names with their UUID?
+#            This is only for you to see and know.
     savename: true
   
 # MySQL-only:
