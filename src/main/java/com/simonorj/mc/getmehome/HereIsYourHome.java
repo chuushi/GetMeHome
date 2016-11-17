@@ -1,11 +1,12 @@
 package com.simonorj.mc.getmehome;
 
 import java.util.HashMap;
-//import java.util.HashSet;
+import java.util.HashSet;
 import java.util.Map;
-//import java.util.Set;
+import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,11 +21,11 @@ public final class HereIsYourHome extends JavaPlugin {
 	/**
 	 * when you get the player's home address
 	 */
-	private Map<UUID,Map<String,Location>> friendz = new HashMap<UUID,Map<String,Location>>();
+	private Map<UUID,HashMap<String,Location>> friendz = new HashMap<>();
 	/**
 	 * "has all homes cached" flag for listing
 	 */
-	//private Set<UUID> knowAllTheirAddress = new HashSet<UUID>();
+	private Set<UUID> knowAllTheirAddress = new HashSet<>();
 	
 	@Override
 	public void onEnable() {
@@ -72,7 +73,7 @@ public final class HereIsYourHome extends JavaPlugin {
 	}
 	
 	private Location getHome(Player p, String n) {
-		Map<String,Location> pHomes = friendz.get(p.getUniqueId());
+		HashMap<String,Location> pHomes = friendz.get(p.getUniqueId());
 		
 		// Master cache has player and player has home
 		if (pHomes != null && pHomes.containsKey(n))
@@ -81,7 +82,7 @@ public final class HereIsYourHome extends JavaPlugin {
 		
 		// Cache doesn't have player
 		if (pHomes == null) {
-			pHomes = new HashMap<String,Location>();
+			pHomes = new HashMap<>();
 			friendz.put(p.getUniqueId(), pHomes);
 		}
 		
@@ -95,24 +96,46 @@ public final class HereIsYourHome extends JavaPlugin {
 		return loc;
 	}
 	
-	private void setHome(Player p, String n) {
-		storage.setHome(p, n, p.getLocation());
+	private SetStatus setHome(Player p, String n) {
+		// TODO: Limit check
+		if (false)
+			return SetStatus.OVERLIMIT;
+		if (!storage.setHome(p, n, p.getLocation()))
+			return SetStatus.ERROR;
+
 		// Attempt to get cache
-		Map<String,Location> pHomes = friendz.get(p.getUniqueId());
+		HashMap<String,Location> pHomes = friendz.get(p.getUniqueId());
 		
 		// Cache doesn't have player
 		if (pHomes == null) {
-			pHomes = new HashMap<String,Location>();
+			pHomes = new HashMap<>();
 			friendz.put(p.getUniqueId(), pHomes);
 		}
 		
 		pHomes.put(n,p.getLocation());
+		return SetStatus.SET;
 	}
-	
+	private enum SetStatus {
+		SET, OVERLIMIT, ERROR
+	}
+
+	private HashMap<String,Location> getPlayerHomes(Player p) {
+		UUID u = p.getUniqueId();
+		HashMap<String,Location> r = friendz.get(u);
+		if (knowAllTheirAddress.contains(u))
+			return r;
+
+		r = storage.getPlayerHomes(u);
+		friendz.put(u,r);
+		knowAllTheirAddress.add(u);
+		return r;
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		
 		if (cmd.getName().equalsIgnoreCase("listhomes")) {
+			getPlayerHomes((Player)sender);
 			return true;
 		}
 		
@@ -136,8 +159,13 @@ public final class HereIsYourHome extends JavaPlugin {
 		}
 		
 		if (cmd.getName().equalsIgnoreCase("sethome")) {
-			setHome(p,name);
-			p.sendMessage("home " + name + " has been set.");
+			SetStatus home = setHome(p,name);
+			if (home == SetStatus.SET)
+				p.sendMessage("home " + name + " has been set.");
+			else if (home == SetStatus.OVERLIMIT)
+				p.sendMessage("You have reached the home set limit.");
+			else
+				p.sendMessage(ChatColor.RED + "The home was not set successfully. Too many hoes set?");
 			return true;
 		}
 		

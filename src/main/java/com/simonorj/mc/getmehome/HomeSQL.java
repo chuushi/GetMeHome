@@ -12,11 +12,18 @@ import org.bukkit.entity.Player;
 
 final class HomeSQL extends HomeStorage {
 	// TODO: WORK IN PROGRESS
+	/*
+	 * The tables:
+	 *
+	 * Homes: uuid, homename, world, x, y, z, yaw, pitch, deleteflag
+	 * Players: uuid, name, homesset
+	 *
+	 */
 	private static final String SQL_GET = "SELECT ";
 	private static final String SQL_SET = "UPDATE";
 	private static final String SQL_NEW = "UPDATE";
 	private final Connection db;
-	
+
 	HomeSQL(final String url, final String username, final String password) throws ClassNotFoundException, SQLException {
 		
 		// Start the database
@@ -65,7 +72,7 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	HashMap<UUID, HashMap<String, Location>> getEntierList() {
+	HashMap<UUID, HashMap<String, Location>> getEntireList() {
 		// TODO Auto-generated method stub
 		return null;
 	}

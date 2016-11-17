@@ -27,7 +27,7 @@ final class HomeYAML extends HomeStorage {
 			e.printStackTrace();
 		}
     }
-    
+
     @Override
     void onDisable() {
     	try {
@@ -63,14 +63,6 @@ final class HomeYAML extends HomeStorage {
 		hc.set(uuid + name + ".w", location.getWorld().getName());
 		hc.set(uuid + name + ".c", new double[]{location.getX(),location.getY(),location.getZ()});
 		hc.set(uuid + name + ".y", new float[]{location.getYaw(),location.getPitch()});
-		// TODO: See if the above works.
-		/*
-		hc.set(uuid + name + ".x", location.getX());
-		hc.set(uuid + name + ".y", location.getY());
-		hc.set(uuid + name + ".z", location.getZ());
-		hc.set(uuid + name + ".yaw", location.getYaw());
-		hc.set(uuid + name + ".pch", location.getPitch());
-		*/
 		return true;
 	}
 
@@ -95,13 +87,6 @@ final class HomeYAML extends HomeStorage {
 				c.next(),
 				y.next(),
 				y.next()
-				/*
-				hc.getDouble(n+"x"),
-				hc.getDouble(n+"y"),
-				hc.getDouble(n+"z"),
-				(float)hc.getDouble(n+"yaw"),
-				(float)hc.getDouble(n+"pch")
-				*/
 				);
 	}
 	
@@ -115,7 +100,7 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	HashMap<UUID, HashMap<String, Location>> getEntierList() {
+	HashMap<UUID, HashMap<String, Location>> getEntireList() {
 		// TODO Auto-generated method stub
 		return null;
 	}
