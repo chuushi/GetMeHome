@@ -16,7 +16,7 @@ final class HomeSQL extends HomeStorage {
 	 * The tables:
 	 *
 	 * Homes: rowid, pid, homename, world, x, y, z, yaw, pitch, deleteflag
-	 * Players: rowid, name, uuid, homesset
+	 * Players: int rowid, varchar name, uuid, int homesset
 	 *
 	 */
 	private static final String SQL_GET = "SELECT ";
@@ -66,13 +66,31 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	HashMap<String, Location> getPlayerHomes(UUID player) {
+	HashMap<String, Location> getAllHomes(UUID player) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	HashMap<UUID, HashMap<String, Location>> getEntireList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	int getHomesSet(Player player) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	boolean deleteHome(Player player, String name) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	Exception getError() {
 		// TODO Auto-generated method stub
 		return null;
 	}

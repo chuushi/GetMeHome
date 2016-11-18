@@ -22,7 +22,7 @@ storage:
     database: minecraft
     username: username
     password: password
-    table: gmh_homes
+    prefix: gmh_
 
 
 ###
@@ -33,7 +33,10 @@ limit:
 # default - default home limit. 1 means only home named
 #             "default" is allowed.
     default: 1
-# The rest of the home limit goes in this format:
-# permission node: maximum number of homes
+# The rest of the home limit can be listed as permission nodes.
+# The priority goes from top to bottom.  If a person has more than
+#   one permission groups below, the top-most node will have
+#   a priority.  The rest of the list can be written as:
+# permission.node: maximum number of homes
 # example:
     gmh.twohomes: 2
