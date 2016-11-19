@@ -7,13 +7,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ClickEvent.Action;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public final class HereIsYourHome extends JavaPlugin {
 	/**
@@ -98,23 +101,6 @@ public final class HereIsYourHome extends JavaPlugin {
 		return loc;
 	}
 	
-	private boolean reachedLimit(Player p) {
-		ConfigurationSection cs = getConfig().getConfigurationSection("limit");
-		Set<String> keys = cs.getKeys(true);
-		Iterator<String> i = keys.iterator();
-		// Skip default
-		i.next();
-		while (i.hasNext()) {
-			String node = i.next();
-			if(!cs.isInt(node)) // Check if node contains an integer instead of sub-nodes. 
-				continue;
-			if (p.hasPermission(node)) {
-				return storage.getHomesSet(p) >= cs.getInt(node);
-			}
-		}
-		return storage.getHomesSet(p) >= cs.getInt("default");
-	}
-	
 	private boolean setHome(Player p, String n) {
 		// TODO: Limit and existence check
 		if (reachedLimit(p) && storage.getHome(p.getUniqueId(), n) == null)
@@ -136,43 +122,96 @@ public final class HereIsYourHome extends JavaPlugin {
 		pHomes.put(n,p.getLocation());
 		return true;
 	}
+	
+	private boolean deleteHome(Player p, String n) {
+		// Delete from storage
+		if (!storage.deleteHome(p, n))
+			return false;
+		// Delete from cache
+		friendz.get(p.getUniqueId()).remove(n);
+		return true;
+	}
 
+	private boolean reachedLimit(Player p) {
+		ConfigurationSection cs = getConfig().getConfigurationSection("limit");
+		Set<String> keys = cs.getKeys(true);
+		Iterator<String> i = keys.iterator();
+		// Skip default
+		i.next();
+		while (i.hasNext()) {
+			String node = i.next();
+			if(!cs.isInt(node)) // Check if node contains an integer instead of sub-nodes. 
+				continue;
+			if (p.hasPermission(node)) {
+				return storage.getHomesSet(p) >= cs.getInt(node);
+			}
+		}
+		return storage.getHomesSet(p) >= cs.getInt("default");
+	}
+	
 	private HashMap<String,Location> getPlayerHomes(Player p) {
 		UUID u = p.getUniqueId();
-		HashMap<String,Location> r = friendz.get(u);
 		if (knowAllTheirAddress.contains(u))
-			return r;
+			return friendz.get(u);
 
-		r = storage.getAllHomes(u);
+		HashMap<String,Location> r = storage.getAllHomes(u);
 		friendz.put(u,r);
 		knowAllTheirAddress.add(u);
 		return r;
 	}
 
+	private boolean hasError(CommandSender p) {
+		Exception e = storage.getError();
+		if (e == null)
+			return false;
+		p.sendMessage("There was an error.");
+		e.printStackTrace();
+		return true;
+	}
+	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if (cmd.getName().equalsIgnoreCase("listhomes")) {
-			if (reachedLimit((Player)sender))
-				sender.sendMessage("Limit reached");
-			else
-				sender.sendMessage("Limit not reached");
-			//getPlayerHomes((Player)sender);
-			return true;
-		}
 		
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("This command is for players.");
 			return true;
 		}
 		
+		// Player-only area (sethome, delhome, listhomes, home)
 		Player p = (Player)sender;
+
+		if (cmd.getName().equalsIgnoreCase("listhomes")) {
+			// Get the homes
+			HashMap<String,Location> map = getPlayerHomes(p);
+			
+			// Emptiness
+			if (map == null || map.size() == 0) {
+				p.sendMessage("You have no homes!");
+				return true;
+			}
+			
+			Set<String> homes = map.keySet(); 
+			
+			TextComponent msg = new TextComponent("Your home(s): ");
+			
+			for (String n : homes) {
+				TextComponent tc = new TextComponent("[" + n + "]");
+				tc.setClickEvent(new ClickEvent(Action.RUN_COMMAND,"/home " + n));
+				msg.addExtra(tc);
+				msg.addExtra(" ");
+			}
+			
+			p.spigot().sendMessage(msg);
+			return true;
+		}
+		
 		String name = "default";
 		if (args.length != 0)
 			name = args[0];
 		
 		if (cmd.getName().equalsIgnoreCase("home")) {
 			Location loc = getHome(p,name);
-			if (loc == null)
+			if (loc == null && !hasError(sender))
 				p.sendMessage("home " + name + " is not set.");
 			else
 				p.teleport(loc);
@@ -182,9 +221,16 @@ public final class HereIsYourHome extends JavaPlugin {
 		if (cmd.getName().equalsIgnoreCase("sethome")) {
 			if (setHome(p,name))
 				p.sendMessage("home " + name + " has been set.");
-			else
+			else if (!hasError(p))
 				p.sendMessage("You have reached the home set limit.");
 			return true;
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("deletehome")) {
+			if (deleteHome(p,name))
+				p.sendMessage("Your home " + name + "is now gone.");
+			else if (!hasError(p))
+				p.sendMessage("That home does not exist!");
 		}
 		
 		return false;

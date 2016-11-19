@@ -112,12 +112,30 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	HashMap<String, Location> getAllHomes(UUID player) {
-		// TODO: do this
-		if (!hc.contains(player.toString()))
+	HashMap<String,Location> getAllHomes(UUID player) {
+		ConfigurationSection cs = hc.getConfigurationSection(player.toString());
+		if (cs == null)
 			return null;
-		return null;
-		
+		HashMap<String,Location> ret = new HashMap<>();
+		for (String n : cs.getKeys(true)) {
+			// Slightly modified version of getHome()
+			ConfigurationSection csh = cs.getConfigurationSection(n);
+			if (csh == null)
+				continue;
+			
+			Iterator<Double> c = csh.getDoubleList("c").iterator();
+			Iterator<Float> y = csh.getFloatList("y").iterator();
+			
+			ret.put(n, new Location(
+					plugin.getServer().getWorld(csh.getString("w")),
+					c.next(),
+					c.next(),
+					c.next(),
+					y.next(),
+					y.next()
+					));
+		}
+		return ret;
 	}
 	
 	@Override

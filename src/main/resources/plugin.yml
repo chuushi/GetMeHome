@@ -6,16 +6,22 @@ main: com.simonorj.mc.getmehome.HereIsYourHome
 website: http://github.com/SimonOrJ/GetMeHome
 
 commands:
+  gmh:
+    description: GetMeHome's main (help) command
   home:
     aliases: [h]
     description: Sends you home
     usage: /home [home name]
   sethome:
-    aliases: [seth]
+    aliases: [seth, homeset]
     description: Sets home at your current position
     usage: /sethome [home name]
+  deletehome:
+    aliases: [deleteh, delhome, delh, homedelete, homed]
+    description: Delets a set home
+    usage: /delhome [home name]
   listhomes:
-    aliases: [listhome,listh]
+    aliases: [listhome, listh, homelist, homel, homes]
     description: Lists all the homes you have
     usage: /listhomes
 

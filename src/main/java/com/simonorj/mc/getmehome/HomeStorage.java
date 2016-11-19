@@ -47,7 +47,7 @@ abstract class HomeStorage {
 	/**
 	 * Gets a map of every player's homes.
 	 * @param player
-	 * @return HashMap of home names to locations.  Empty set if player has never set homes.
+	 * @return HashMap of home names to locations.  Empty set if player has no homes.
 	 */
 	abstract HashMap<String,Location> getAllHomes(UUID player);
 
