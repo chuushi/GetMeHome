@@ -48,24 +48,8 @@ public final class HereIsYourHome extends JavaPlugin {
 		// Storage
 		if (type.equalsIgnoreCase("yaml"))
 			storage = new HomeYAML(this);
-		// TODO: Add MySQL support as well
-		
-		// Setup Database
-		// TODO: Database stuff
-		/*
-		try {
-			db = new HomeSQL("", "", "");
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			getLogger().warning("Database driver does not exist. Is Java up to date?");
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			getLogger().warning("Database connection failed. SQLState/Message:");
-			getLogger().warning(e.getSQLState());
-			getLogger().warning(e.getMessage());
-		}
-		*/
-		
+		else if (type.equalsIgnoreCase("MySQL"))
+			storage = new HomeSQL(this);
 		if (storage == null) {
 			getLogger().warning("GetMeHome: Home storage was not specified correctly. Disabling...");
 			getServer().getPluginManager().disablePlugin(this);
@@ -92,7 +76,7 @@ public final class HereIsYourHome extends JavaPlugin {
 		}
 		
 		// get from storage
-		Location loc = storage.getHome(p.getUniqueId(), n);
+		Location loc = storage.getHome(p, n);
 		
 		// player has the named home
 		if (loc != null)
@@ -102,11 +86,10 @@ public final class HereIsYourHome extends JavaPlugin {
 	}
 	
 	private boolean setHome(Player p, String n) {
-		// TODO: Limit and existence check
-		if (reachedLimit(p) && storage.getHome(p.getUniqueId(), n) == null)
+		if (reachedLimit(p) && storage.getHome(p, n) == null)
 			return false;
 		
-		if (!storage.setHome(p, n, p.getLocation()))
+		if (!storage.setHome(p, n))
 			// means error happened. TODO: make this give an exception.
 			return false;
 
@@ -132,7 +115,7 @@ public final class HereIsYourHome extends JavaPlugin {
 		return true;
 	}
 
-	private boolean reachedLimit(Player p) {
+	private boolean reachedLimit(Player p, boolean ) {
 		ConfigurationSection cs = getConfig().getConfigurationSection("limit");
 		Set<String> keys = cs.getKeys(true);
 		Iterator<String> i = keys.iterator();
@@ -150,18 +133,18 @@ public final class HereIsYourHome extends JavaPlugin {
 	}
 	
 	private HashMap<String,Location> getPlayerHomes(Player p) {
-		UUID u = p.getUniqueId();
+		final UUID u = p.getUniqueId();
 		if (knowAllTheirAddress.contains(u))
 			return friendz.get(u);
 
-		HashMap<String,Location> r = storage.getAllHomes(u);
+		HashMap<String,Location> r = storage.getAllHomes(p);
 		friendz.put(u,r);
 		knowAllTheirAddress.add(u);
 		return r;
 	}
 
 	private boolean hasError(CommandSender p) {
-		Exception e = storage.getError();
+		final Exception e = storage.getError();
 		if (e == null)
 			return false;
 		p.sendMessage("There was an error.");

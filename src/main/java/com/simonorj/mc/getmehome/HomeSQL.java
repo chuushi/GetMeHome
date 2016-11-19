@@ -19,11 +19,38 @@ final class HomeSQL extends HomeStorage {
 	 * Players: int rowid, varchar name, uuid, int homesset
 	 *
 	 */
+	
+	// From the other place
+	// TODO: Add MySQL support as well
+	
+	// Setup Database
+	// TODO: Database stuff
+	/*
+	try {
+		db = new HomeSQL("", "", "");
+	} catch (ClassNotFoundException e) {
+		// TODO Auto-generated catch block
+		getLogger().warning("Database driver does not exist. Is Java up to date?");
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		getLogger().warning("Database connection failed. SQLState/Message:");
+		getLogger().warning(e.getSQLState());
+		getLogger().warning(e.getMessage());
+	}
+	*/
+	
+
 	private static final String SQL_GET = "SELECT ";
 	private static final String SQL_SET = "UPDATE";
 	private static final String SQL_NEW = "UPDATE";
 	private final Connection db;
 
+	// PlaceHolder
+	HomeSQL(final HereIsYourHome plugin) {
+		// Honestly, plugin is all you need because you can get configuration through it.
+		throw new RuntimeException();
+	}
+	
 	HomeSQL(final String url, final String username, final String password) throws ClassNotFoundException, SQLException {
 		
 		// Start the database
@@ -54,19 +81,19 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	Location getHome(UUID player, String name) {
+	Location getHome(Player player, String name) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	boolean setHome(Player player, String name, Location location) {
+	boolean setHome(Player player, String name) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	HashMap<String, Location> getAllHomes(UUID player) {
+	HashMap<String, Location> getAllHomes(Player player) {
 		// TODO Auto-generated method stub
 		return null;
 	}

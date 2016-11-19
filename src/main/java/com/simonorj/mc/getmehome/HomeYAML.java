@@ -2,8 +2,10 @@ package com.simonorj.mc.getmehome;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -14,17 +16,24 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 final class HomeYAML extends HomeStorage {
-    private File homeFile;
-    private FileConfiguration hc;
-    private HereIsYourHome plugin;
+    private final File homeFile;
+    private final FileConfiguration hc;
+    private final HereIsYourHome plugin;
 
     HomeYAML(HereIsYourHome pl) {
     	plugin = pl;
-        saveDefaultHomeConfig();
+        homeFile = new File(plugin.getDataFolder(), "homes.yml");
+
+        if (!homeFile.exists()) {
+            homeFile.getParentFile().mkdirs();
+            plugin.saveResource("homes.yml", false);
+         }
+
+        hc = new YamlConfiguration();
         try {
+            hc.load(homeFile);
 			hc.save(homeFile);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+        } catch (InvalidConfigurationException | IOException e) {
 			e.printStackTrace();
 		}
     }
@@ -40,25 +49,9 @@ final class HomeYAML extends HomeStorage {
 		}
     }
     
-    private void saveDefaultHomeConfig() {
-        homeFile = new File(plugin.getDataFolder(), "homes.yml");
-
-        if (!homeFile.exists()) {
-            homeFile.getParentFile().mkdirs();
-            plugin.saveResource("homes.yml", false);
-         }
-
-        hc = new YamlConfiguration();
-        try {
-            hc.load(homeFile);
-        } catch (InvalidConfigurationException | IOException e) {
-			e.printStackTrace();
-		}
-    }
-
 	@Override
-	Location getHome(UUID player, String name) {
-		ConfigurationSection cs = hc.getConfigurationSection(player.toString() + "." + name);
+	Location getHome(Player player, String name) {
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString() + "." + name);
 		if (cs == null)
 			return null;
 		
@@ -76,7 +69,7 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	boolean setHome(Player player, String name, Location location) {
+	boolean setHome(Player player, String name) {
 		// Increment when adding another home
 		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
 		if (cs == null) {
@@ -88,10 +81,18 @@ final class HomeYAML extends HomeStorage {
 			cs.set("n", player.getName());
 		
 		// Overwrite variable (and home name if it existed)
+		Location l = player.getLocation();
 		cs = cs.createSection(name);
-		cs.set("w", location.getWorld().getName());
-		cs.set("c", new double[]{location.getX(),location.getY(),location.getZ()});
-		cs.set("y", new float[]{location.getYaw(),location.getPitch()});
+		cs.set("w", l.getWorld().getName());
+		List<Double> c = new ArrayList<>();
+		c.add(l.getX());
+		c.add(l.getY());
+		c.add(l.getZ());
+		List<Float> y = new ArrayList<>();
+		y.add(l.getYaw());
+		y.add(l.getPitch());
+		cs.set("c", c);
+		cs.set("y", y);
 		return true;
 	}
 
@@ -112,8 +113,8 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	HashMap<String,Location> getAllHomes(UUID player) {
-		ConfigurationSection cs = hc.getConfigurationSection(player.toString());
+	HashMap<String,Location> getAllHomes(Player player) {
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
 		if (cs == null)
 			return null;
 		HashMap<String,Location> ret = new HashMap<>();

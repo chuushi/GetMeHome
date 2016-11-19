@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 abstract class HomeStorage {
 	/**
-	 * Run before shutting down the server.
+	 * Run before shutting down the server (such as disconnect or save)
 	 */
     abstract void onDisable();
 
@@ -18,7 +18,7 @@ abstract class HomeStorage {
 	 * @param name
 	 * @return Location of the player home. null if no such home.
 	 */
-	abstract Location getHome(UUID player, String name);
+	abstract Location getHome(Player player, String name);
 
 	/**
 	 * Sets home of a player from Bukkit's Location class format.
@@ -27,7 +27,7 @@ abstract class HomeStorage {
 	 * @param location
 	 * @return Success of the saving.
 	 */
-	abstract boolean setHome(Player player, String name, Location location);
+	abstract boolean setHome(Player player, String name);
 	
 	/**
 	 * Gets number of homes set by a player
@@ -49,7 +49,7 @@ abstract class HomeStorage {
 	 * @param player
 	 * @return HashMap of home names to locations.  Empty set if player has no homes.
 	 */
-	abstract HashMap<String,Location> getAllHomes(UUID player);
+	abstract HashMap<String,Location> getAllHomes(Player player);
 
 	/**
 	 * Gets the entire list of homes.  This should be used only for moving the storage method/type.
