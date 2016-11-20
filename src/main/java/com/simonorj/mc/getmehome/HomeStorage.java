@@ -6,6 +6,13 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+/**
+ * This is a superclass(?) for accessing file/database storage of homes.
+ * Note: This does not cache anything.  Caching must be done in the
+ * main code.
+ * @author SimonOrJ
+ *
+ */
 abstract class HomeStorage {
 	/**
 	 * Run before shutting down the server (such as disconnect or save)

@@ -24,19 +24,36 @@ storage:
     password: password
     prefix: gmh_
 
+###
+# Localization
+localization:
+#
+
+# Use {0} in place of home name(s).
+# Most of these should be self-explanatory.
+    TAG: "[GetMeHome]"
+    HOME: "Welcome to your {0} home."
+    SET: "{0} is now set."
+    DELETE: "{0} has been deleted."
+    DNE: "{0} does not exist."
+    LIST: "Your homes: {0}"
+    LIMIT_REACHED: "You are at your limit."
+    ERROR: "An internal error has occurred."
+     
+
 
 ###
 # Home Limits
 limit:
 #
 
-# default - default home limit. 1 means only home named
-#             "default" is allowed.
+# default - default home limit. 1 means only home named "default"
+#           is allowed.  This must be on top. (leave it here)
     default: 1
-# The rest of the home limit can be listed as permission nodes.
-# The priority goes from top to bottom.  If a person has more than
-#   one permission groups below, the top-most node will have
-#   a priority.  The rest of the list can be written as:
-# permission.node: maximum number of homes
+# The checking priority goes from top to bottom (excluding default).
+#   If a person has two or more permission groups in the list below,
+#   the top-most node will have priority.
+# The rest of the home limit can be listed in this format:
+#   permission.node: maximum number of homes
 # example:
     gmh.twohomes: 2

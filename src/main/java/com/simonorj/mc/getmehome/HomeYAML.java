@@ -51,7 +51,7 @@ final class HomeYAML extends HomeStorage {
     
 	@Override
 	Location getHome(Player player, String name) {
-		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString() + "." + name);
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString() + ".h." + name);
 		if (cs == null)
 			return null;
 		
@@ -71,9 +71,9 @@ final class HomeYAML extends HomeStorage {
 	@Override
 	boolean setHome(Player player, String name) {
 		// Increment when adding another home
-		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
 		if (cs == null) {
-			cs = hc.createSection(player.getUniqueId().toString());
+			cs = hc.createSection(player.getUniqueId() + ".h");
 		}
 		
 		// Update name
@@ -99,13 +99,13 @@ final class HomeYAML extends HomeStorage {
 	@Override
 	int getHomesSet(Player player) {
 		// Size of configuration
-		return hc.getConfigurationSection(player.getUniqueId().toString())
+		return hc.getConfigurationSection(player.getUniqueId() + ".h")
 				.getKeys(false).size();
 	}
 	
 	@Override
 	boolean deleteHome(Player player, String name) {
-		String path = player.getUniqueId() + "." + name;
+		String path = player.getUniqueId() + ".h." + name;
 		if (!hc.contains(path))
 			return false;
 		hc.set(path, null);
@@ -114,7 +114,7 @@ final class HomeYAML extends HomeStorage {
 	
 	@Override
 	HashMap<String,Location> getAllHomes(Player player) {
-		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
 		if (cs == null)
 			return null;
 		HashMap<String,Location> ret = new HashMap<>();

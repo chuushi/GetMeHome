@@ -3,6 +3,7 @@ package com.simonorj.mc.getmehome;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -28,9 +29,19 @@ public final class HereIsYourHome extends JavaPlugin {
 	 */
 	private Map<UUID,HashMap<String,Location>> friendz = new HashMap<>();
 	/**
-	 * "has all homes cached" flag for listing
+	 * "has all homes cached" flag for listing homes / getting all homes set
 	 */
 	private Set<UUID> knowAllTheirAddress = new HashSet<>();
+	
+	private String TAG;
+	private String HOME;
+	private String SET;
+	private String DELETE;
+	private String DNE;
+	private String LIST;
+	private String LIMIT_REACHED;
+	private String ERROR;
+	
 	
 	@Override
 	public void onEnable() {
@@ -86,11 +97,12 @@ public final class HereIsYourHome extends JavaPlugin {
 	}
 	
 	private boolean setHome(Player p, String n) {
-		if (reachedLimit(p) && storage.getHome(p, n) == null)
+		if (reachedLimit(p,false))
+			return false;
+		if (reachedLimit(p,true) && storage.getHome(p, n) == null)
 			return false;
 		
 		if (!storage.setHome(p, n))
-			// means error happened. TODO: make this give an exception.
 			return false;
 
 		// Attempt to get cache
@@ -115,9 +127,14 @@ public final class HereIsYourHome extends JavaPlugin {
 		return true;
 	}
 
-	private boolean reachedLimit(Player p, boolean ) {
+	// inclusive: includes currently set home
+	private boolean reachedLimit(Player p, boolean inclusive) {
 		ConfigurationSection cs = getConfig().getConfigurationSection("limit");
-		Set<String> keys = cs.getKeys(true);
+		
+		// Get maximum homes
+		int maxHomes = -1;
+		// Must be ordered: LinkedHashSet.
+		LinkedHashSet<String> keys = (LinkedHashSet<String>)cs.getKeys(true);
 		Iterator<String> i = keys.iterator();
 		// Skip default
 		i.next();
@@ -126,13 +143,21 @@ public final class HereIsYourHome extends JavaPlugin {
 			if(!cs.isInt(node)) // Check if node contains an integer instead of sub-nodes. 
 				continue;
 			if (p.hasPermission(node)) {
-				return storage.getHomesSet(p) >= cs.getInt(node);
+				maxHomes = cs.getInt(node);
+				break;
 			}
 		}
-		return storage.getHomesSet(p) >= cs.getInt("default");
+		if (maxHomes == -1)
+			maxHomes = cs.getInt("default");
+		
+		// Get current homes
+		int setHomes = listHomes(p).size();
+		
+		return inclusive ? setHomes > maxHomes
+				: setHomes >= maxHomes;
 	}
 	
-	private HashMap<String,Location> getPlayerHomes(Player p) {
+	private HashMap<String,Location> listHomes(Player p) {
 		final UUID u = p.getUniqueId();
 		if (knowAllTheirAddress.contains(u))
 			return friendz.get(u);
@@ -165,7 +190,7 @@ public final class HereIsYourHome extends JavaPlugin {
 
 		if (cmd.getName().equalsIgnoreCase("listhomes")) {
 			// Get the homes
-			HashMap<String,Location> map = getPlayerHomes(p);
+			HashMap<String,Location> map = listHomes(p);
 			
 			// Emptiness
 			if (map == null || map.size() == 0) {
