@@ -1,11 +1,12 @@
-# # # # # # # # # # # # # # #
-#  GetMeHome Configuration  #
-#    (Future Plugin Link)   #
+# # # # # # # # # # # # # # # # # # # # #
+#        GetMeHome Configuration        #
+# https://github.com/SimonOrJ/GetMeHome #
 
-###
-# Home storage settings
+
+###                   ###
+# Home storage settings #
 storage:
-#
+#                       #
 
 # type - Format to save homes as. Possible values:
 # YAML    Save it as homes.yml file. Good for small servers.
@@ -22,30 +23,44 @@ storage:
     database: minecraft
     username: username
     password: password
+
+# MySQL or SQLite:
     prefix: gmh_
 
-###
-# Localization
+
+###          ###
+# Localization #
 localization:
-#
+#              #
 
-# Use {0} in place of home name(s).
 # Most of these should be self-explanatory.
-    TAG: "[GetMeHome]"
-    HOME: "Welcome to your {0} home."
-    SET: "{0} is now set."
-    DELETE: "{0} has been deleted."
-    DNE: "{0} does not exist."
-    LIST: "Your homes: {0}"
-    LIMIT_REACHED: "You are at your limit."
-    ERROR: "An internal error has occurred."
-     
+# Tag to prefix before any message.
+    TAG: "&6[GetMeHome]"
+
+# Maximum distance for "Welcome to your home" message to not show
+    HOME_WELCOME_DIST: 4;
+
+# Home command messages
+# Use {0} in place of home name(s).
+    HOME: "&eWelcome to your &f{0}&e home."
+    SET: "&f{0}&e home set."
+    DELETE: "&7{0}&e has been deleted."
+    DNE: "&7{0}&e home is not set."
+# Listing homes
+    LIST: "&eYour home:"
+    LIST_PLURAL: "&eYour homes:"
+    LIST_HOME_COLOR: "&a"
+    NOHOME: "&eYou are homeless!"
+# Error handling
+# Use {0} in place of home limit.
+    LIMIT_REACHED: "&eYou are at your limit of &c{0}&e home(s)."
+    ERROR: "&cAn error has occurred."
 
 
-###
-# Home Limits
+###         ###
+# Home Limits #
 limit:
-#
+#             #
 
 # default - default home limit. 1 means only home named "default"
 #           is allowed.  This must be on top. (leave it here)

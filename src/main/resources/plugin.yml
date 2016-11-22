@@ -6,7 +6,8 @@ main: com.simonorj.mc.getmehome.HereIsYourHome
 website: http://github.com/SimonOrJ/GetMeHome
 
 commands:
-  gmh:
+  getmehome:
+    aliases: [gmh]
     description: GetMeHome's main (help) command
   home:
     aliases: [h]

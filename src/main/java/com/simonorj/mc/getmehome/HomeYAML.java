@@ -19,9 +19,15 @@ final class HomeYAML extends HomeStorage {
     private final File homeFile;
     private final FileConfiguration hc;
     private final HereIsYourHome plugin;
+    private final boolean saveName;
 
     HomeYAML(HereIsYourHome pl) {
     	plugin = pl;
+    	
+    	// Variable setup
+    	saveName = plugin.getConfig().getBoolean("storage.savename");
+    	
+    	// Storage setup
         homeFile = new File(plugin.getDataFolder(), "homes.yml");
 
         if (!homeFile.exists()) {
@@ -71,14 +77,19 @@ final class HomeYAML extends HomeStorage {
 	@Override
 	boolean setHome(Player player, String name) {
 		// Increment when adding another home
-		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
+		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
 		if (cs == null) {
-			cs = hc.createSection(player.getUniqueId() + ".h");
+			cs = hc.createSection(player.getUniqueId().toString());
 		}
 		
 		// Update name
-		if (plugin.getConfig().getBoolean("storage.savename"))
+		if (saveName)
 			cs.set("n", player.getName());
+		
+		cs = cs.getConfigurationSection("h");
+		if (cs == null) {
+			cs = hc.createSection(player.getUniqueId() + ".h");
+		}
 		
 		// Overwrite variable (and home name if it existed)
 		Location l = player.getLocation();
@@ -115,9 +126,9 @@ final class HomeYAML extends HomeStorage {
 	@Override
 	HashMap<String,Location> getAllHomes(Player player) {
 		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
-		if (cs == null)
-			return null;
 		HashMap<String,Location> ret = new HashMap<>();
+		if (cs == null)
+			return ret;
 		for (String n : cs.getKeys(true)) {
 			// Slightly modified version of getHome()
 			ConfigurationSection csh = cs.getConfigurationSection(n);
