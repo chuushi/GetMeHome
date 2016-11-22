@@ -40,17 +40,26 @@ localization:
 # Maximum distance for "Welcome to your home" message to not show
     HOME_WELCOME_DIST: 4;
 
+# Yes/No -- no color codes.
+    YES: "Yes"
+    NO: "No"
+
 # Home command messages
 # Use {0} in place of home name(s).
     HOME: "&eWelcome to your &f{0}&e home."
+    UNSAFE: "&eGoing to the home &f{0}&e may be &l&cunsafe&r&e."
+    UNSAFE_PROMPT: "&eAre you sure you want to go there?"
+    UNSAFE_FORCE: "&eProceeding &7unsafe&e transportation..."
     SET: "&f{0}&e home set."
     DELETE: "&7{0}&e has been deleted."
     DNE: "&7{0}&e home is not set."
+
 # Listing homes
     LIST: "&eYour home:"
     LIST_PLURAL: "&eYour homes:"
     LIST_HOME_COLOR: "&a"
     NOHOME: "&eYou are homeless!"
+
 # Error handling
 # Use {0} in place of home limit.
     LIMIT_REACHED: "&eYou are at your limit of &c{0}&e home(s)."

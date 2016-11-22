@@ -46,32 +46,23 @@ final class HomeSQL extends HomeStorage {
 	private final Connection db;
 
 	// PlaceHolder
-	HomeSQL(final HereIsYourHome plugin) {
-		// Honestly, plugin is all you need because you can get configuration through it.
-		throw new RuntimeException();
-	}
-	
-	HomeSQL(final String url, final String username, final String password) throws ClassNotFoundException, SQLException {
-		
-		// Start the database
-		if (username == null) {
-			Class.forName(""); // TODO: SQLite driver
-			db = DriverManager.getConnection(url);
-		} else {
-			Class.forName("com.mysql.jdbc.Driver");
-			db = DriverManager.getConnection(url, username, password);
+	HomeSQL(final HereIsYourHome plugin, boolean server) {
+		try {
+			String url = null, user = null, password = null;
+			if (server) {
+					Class.forName("com.mysql.jdbc.Driver");
+			} else {
+				url = "";
+			}
+		DriverManager.getConnection(url, user, password);
+		} catch (ClassNotFoundException | SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
-		// Check if table exists
-		Statement s = db.prepareStatement("SHOW TABLES LIKE ?");
 		
-		
-		// No table?
-		//setupTable();
-	}
-	
-	Location HomeDB(String homeName) {
-		return null;
+		// INCOMPLETE
+		throw new RuntimeException();
 	}
 
 	@Override
@@ -93,18 +84,6 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	HashMap<String, Location> getAllHomes(Player player) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	HashMap<UUID, HashMap<String, Location>> getEntireList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	int getHomesSet(Player player) {
 		// TODO Auto-generated method stub
 		return 0;
@@ -114,6 +93,18 @@ final class HomeSQL extends HomeStorage {
 	boolean deleteHome(Player player, String name) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	HashMap<String, Location> getAllHomes(Player player) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	HashMap<UUID, HashMap<String, Location>> getEntireList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override

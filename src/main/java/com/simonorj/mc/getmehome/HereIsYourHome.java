@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -34,8 +37,8 @@ public final class HereIsYourHome extends JavaPlugin {
 	
 	private Set<String> loadError = null;
 	
-	private String TAG,HOME,SET,DELETE,DNE,
-		LIST,LIST_PL,NOHOME,LIMIT_REACHED,ERROR;
+	private String YES,NO,TAG,HOME,UNSAFE,UNSAFE_PROMPT,UNSAFE_FORCE,
+		SET,DELETE,DNE,LIST,LIST_PL,NOHOME,LIMIT_REACHED,ERROR;
 	private int HOME_DIST;
 	private ChatColor TAG_COLOR, LIST_COLOR;
 	
@@ -70,38 +73,45 @@ public final class HereIsYourHome extends JavaPlugin {
 		Set<String> err = new HashSet<>();
 		
 		// Localization
-		if (!getConfig().contains("localization"))
-			err.add("localization is empty");
-		else {
-			ConfigurationSection cst = getConfig().getConfigurationSection("localization");
-			TAG =       cst.getString("TAG",
-					"&6[GetMeHome]");
-			TAG_COLOR =    ChatColor.getByChar(TAG.startsWith("&") ? TAG.charAt(1) : '8');
-			TAG =          ChatColor.translateAlternateColorCodes('&',TAG);
-			HOME_DIST = cst.getInt("HOME_WELCOME_DIST",
-					4);
-			HOME_DIST = HOME_DIST * HOME_DIST;
-			HOME =         ChatColor.translateAlternateColorCodes('&',cst.getString("HOME",
-					"&eWelcome to your &f{0}&e home."));
-			SET =          ChatColor.translateAlternateColorCodes('&',cst.getString("SET",
-					"&f{0}&e home set."));
-			DELETE =       ChatColor.translateAlternateColorCodes('&',cst.getString("DELETE",
-					"&7{0}&e has been deleted."));
-			DNE =          ChatColor.translateAlternateColorCodes('&',cst.getString("DNE",
-					"&7{0}&e home is not set."));
-			LIST =         ChatColor.translateAlternateColorCodes('&',cst.getString("LIST",
-					"&eYour home:"));
-			LIST_PL =      ChatColor.translateAlternateColorCodes('&',cst.getString("LIST_PLURAL",
-					"&eYour homes:"));
-			LIST_COLOR =   ChatColor.getByChar(cst.getString("LIST_COLOR",
-					"&a").charAt(1));
-			NOHOME =       ChatColor.translateAlternateColorCodes('&',cst.getString("NOHOME",
-					"&eYou have no homes."));
-			LIMIT_REACHED =ChatColor.translateAlternateColorCodes('&',cst.getString("LIMIT_REACHED",
-					"&eYou are at your limit of &c{0}&e home(s)."));
-			ERROR =        ChatColor.translateAlternateColorCodes('&',cst.getString("ERROR",
-					"&cAn error has occurred."));
-		}
+		ConfigurationSection cst = getConfig().getConfigurationSection("localization");
+		
+		YES =       cst.getString("YES",
+				"Yes");
+		NO =       cst.getString("NO",
+				"No");
+		TAG =       cst.getString("TAG",
+				"&6[GetMeHome]");
+		TAG_COLOR =    ChatColor.getByChar(TAG.startsWith("&") ? TAG.charAt(1) : '8');
+		TAG =          ChatColor.translateAlternateColorCodes('&',TAG);
+		HOME_DIST = cst.getInt("HOME_WELCOME_DIST",
+				4);
+		HOME_DIST = HOME_DIST * HOME_DIST;
+		HOME =         ChatColor.translateAlternateColorCodes('&',cst.getString("HOME",
+				"&eWelcome to your &f{0}&e home."));
+		UNSAFE =       ChatColor.translateAlternateColorCodes('&',cst.getString("UNSAFE",
+				"&eGoing to the home &f{0}&e may be &cunsafe&e."));
+		UNSAFE_PROMPT =       ChatColor.translateAlternateColorCodes('&',cst.getString("UNSAFE_PROMPT",
+				"&eAre you sure you want to go there?"));
+		UNSAFE_FORCE =       ChatColor.translateAlternateColorCodes('&',cst.getString("UNSAFE_FORCE",
+				"&eProceeding &7unsafe&e transportation..."));
+		SET =          ChatColor.translateAlternateColorCodes('&',cst.getString("SET",
+				"&f{0}&e home set."));
+		DELETE =       ChatColor.translateAlternateColorCodes('&',cst.getString("DELETE",
+				"&7{0}&e has been deleted."));
+		DNE =          ChatColor.translateAlternateColorCodes('&',cst.getString("DNE",
+				"&7{0}&e home is not set."));
+		LIST =         ChatColor.translateAlternateColorCodes('&',cst.getString("LIST",
+				"&eYour home:"));
+		LIST_PL =      ChatColor.translateAlternateColorCodes('&',cst.getString("LIST_PLURAL",
+				"&eYour homes:"));
+		LIST_COLOR =   ChatColor.getByChar(cst.getString("LIST_COLOR",
+				"&a").charAt(1));
+		NOHOME =       ChatColor.translateAlternateColorCodes('&',cst.getString("NOHOME",
+				"&eYou have no homes."));
+		LIMIT_REACHED =ChatColor.translateAlternateColorCodes('&',cst.getString("LIMIT_REACHED",
+				"&eYou are at your limit of &c{0}&e home(s)."));
+		ERROR =        ChatColor.translateAlternateColorCodes('&',cst.getString("ERROR",
+				"&cAn error has occurred."));
 
 		// Limit
 		if (!getConfig().contains("limit.default"))
@@ -150,10 +160,10 @@ public final class HereIsYourHome extends JavaPlugin {
 			else if (type.equalsIgnoreCase("mysql")) {
 				if (!cs.contains("database"))
 					err.add("storage.database is empty");
-				storage = new HomeSQL(this);
+				storage = new HomeSQL(this, true);
 			}
 			else if (type.equalsIgnoreCase("sqlite")) {
-				storage = new HomeSQL(this);
+				storage = new HomeSQL(this, false);
 			}
 			
 			if (storage == null) {
@@ -221,7 +231,9 @@ public final class HereIsYourHome extends JavaPlugin {
 		if (!storage.deleteHome(p, n))
 			return false;
 		// Delete from cache
-		playerHomeCache.get(p.getUniqueId()).remove(n);
+		HashMap<String,Location> rm = playerHomeCache.get(p.getUniqueId());
+		if (rm != null)
+			rm.remove(n);
 		return true;
 	}
 
@@ -303,12 +315,12 @@ public final class HereIsYourHome extends JavaPlugin {
 							TextComponent c = new TextComponent("[Yes]");
 							c.setColor(ChatColor.GREEN);
 							c.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND
-									, "/" + label + " " + args[0] + " yes"));
+									, "/" + label + ' ' + args[0] + ' ' + YES));
 							msg.addExtra(c);
 							msg.addExtra(" ");
 							c = new TextComponent("[No]");
 							c.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND
-									, "/" + label + " " + args[0] + " no"));
+									, "/" + label + ' ' + args[0] + ' ' + NO));
 							c.setColor(ChatColor.RED);
 							msg.addExtra(c);
 							if (sender instanceof Player)
@@ -393,12 +405,39 @@ public final class HereIsYourHome extends JavaPlugin {
 				return true;
 			}
 			
+			// Safety check
+			Block h = loc.getBlock().getRelative(BlockFace.UP);
+			Block m = loc.getBlock();
+			Block b = loc.getBlock().getRelative(BlockFace.DOWN);
+			if (h.getType().isOccluding()
+					|| (m.isLiquid() && !m.getType().equals(Material.STATIONARY_WATER))
+					|| b.getType().equals(Material.AIR) || b.isLiquid()) {
+				if (args.length > 1 && args[1].equalsIgnoreCase("yes"))
+					p.sendMessage(TAG_COLOR + "> " + UNSAFE_FORCE);
+				else {
+					p.sendMessage(tagMsg(MessageFormat.format(UNSAFE, home)));
+					
+					TextComponent msg = new TextComponent("> ");
+					msg.setColor(TAG_COLOR);
+					msg.addExtra(UNSAFE_PROMPT);
+					msg.addExtra(" ");
+					TextComponent yes = new TextComponent('['+YES+']');
+					yes.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND, '/' + label + ' ' + home + " yes"));
+					yes.setColor(ChatColor.LIGHT_PURPLE);
+					msg.addExtra(yes);
+					p.spigot().sendMessage(msg);
+					return true;
+				}
+			}
 			// Welcome home!
-			int a = new Double(loc.distanceSquared(p.getLocation())).intValue();
+			int dist = new Double(loc.distanceSquared(p.getLocation())).intValue();
 			p.teleport(loc);
-			if (a > HOME_DIST)
-				p.sendMessage(tagMsg(MessageFormat.format(HOME, home)));
+			boolean farAway = true;
+			if (p.getWorld().equals(loc.getWorld()))
+				farAway = dist > HOME_DIST;
 			
+			if (farAway)
+				p.sendMessage(tagMsg(MessageFormat.format(HOME, home)));
 			return true;
 		}
 		
@@ -424,7 +463,8 @@ public final class HereIsYourHome extends JavaPlugin {
 	public final class SavingDetector implements Listener {
 		@EventHandler (priority=EventPriority.MONITOR)
 		public void allOut(PlayerQuitEvent e) {
-			if (getServer().getOnlinePlayers().size() <= 1) {
+			if (getServer().getOnlinePlayers().size() <= 1
+					&& !playerAllCached.isEmpty()) {
 				// Save home data
 				storage.onDisable();
 				loadStorage();
