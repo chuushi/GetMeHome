@@ -15,9 +15,9 @@ final class HomeSQL extends HomeStorage {
 	/*
 	 * The tables:
 	 *
-	 * Homes: rowid, pid, homename, world, x, y, z, yaw, pitch, deleteflag
-	 * Players: int rowid, varchar name, uuid, int homesset
-	 *
+	 * Homes: int rowid, pid, homename, wid, x, y, z, yaw, pitch, deleteflag
+	 * Players: int rowid, varchar name, uuid, int homesset, int (rowid of) defaulthome
+	 * World: int rowid, world
 	 */
 	
 	// From the other place
@@ -38,9 +38,19 @@ final class HomeSQL extends HomeStorage {
 		getLogger().warning(e.getMessage());
 	}
 	*/
-	
+	/*
+	 * getHome: SELECT  wid,x,y,z,yaw,pitch FROM _homes WHERE pid=$ROWID LIMIT 1;
+	 * setHome: UPDATE _homes SET blah WHERE pid=$ROWID LIMIT 1;
+	 *   if not modified:
+	 *     Look for home with deleteflag
+	 *       if has:
+	 *         UPDATE _homes SET blah WHERE
+	 *
+	 *     if the above returned nothing:
+	 *       INSERT INTO _homes
+	 */
 
-	private static final String SQL_GET = "SELECT ";
+	private static final String SQL_GET_HOME = "SELECT ";
 	private static final String SQL_SET = "UPDATE";
 	private static final String SQL_NEW = "UPDATE";
 	private final Connection db;
@@ -78,7 +88,7 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	boolean setHome(Player player, String name) {
+	boolean setHome(Player player, String name, Location loc) {
 		// TODO Auto-generated method stub
 		return false;
 	}

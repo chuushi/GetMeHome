@@ -73,13 +73,14 @@ final class HomeYAML extends HomeStorage {
 				y.next()
 				);
 	}
-	
+
 	@Override
-	boolean setHome(Player player, String name) {
+	boolean setHome(Player player, String name, Location loc) {
+		String uid = player.getUniqueId().toString();
 		// Increment when adding another home
-		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString());
+		ConfigurationSection cs = hc.getConfigurationSection(uid);
 		if (cs == null) {
-			cs = hc.createSection(player.getUniqueId().toString());
+			cs = hc.createSection(uid);
 		}
 		
 		// Update name
@@ -88,20 +89,19 @@ final class HomeYAML extends HomeStorage {
 		
 		cs = cs.getConfigurationSection("h");
 		if (cs == null) {
-			cs = hc.createSection(player.getUniqueId() + ".h");
+			cs = hc.createSection(uid + ".h");
 		}
 		
 		// Overwrite variable (and home name if it existed)
-		Location l = player.getLocation();
 		cs = cs.createSection(name);
-		cs.set("w", l.getWorld().getName());
+		cs.set("w", loc.getWorld().getName());
 		List<Double> c = new ArrayList<>();
-		c.add(l.getX());
-		c.add(l.getY());
-		c.add(l.getZ());
+		c.add(loc.getX());
+		c.add(loc.getY());
+		c.add(loc.getZ());
 		List<Float> y = new ArrayList<>();
-		y.add(l.getYaw());
-		y.add(l.getPitch());
+		y.add(loc.getYaw());
+		y.add(loc.getPitch());
 		cs.set("c", c);
 		cs.set("y", y);
 		return true;

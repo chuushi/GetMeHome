@@ -396,7 +396,8 @@ public final class HereIsYourHome extends JavaPlugin {
 		String home = "default";
 		if (args.length != 0)
 			home = args[0];
-		
+
+		// TODO: Put it in own method
 		if (cmd.getName().equalsIgnoreCase("home")) {
 			Location loc = getHome(p,home);
 			// No home
@@ -406,10 +407,11 @@ public final class HereIsYourHome extends JavaPlugin {
 			}
 			
 			// Safety check
+			// TODO: Make safety check toggleable via configuration
 			Block h = loc.getBlock().getRelative(BlockFace.UP);
 			Block m = loc.getBlock();
 			Block b = loc.getBlock().getRelative(BlockFace.DOWN);
-			if (h.getType().isOccluding()
+			if (h.getType().isOccluding() // TODO: Include lava as well
 					|| (m.isLiquid() && !m.getType().equals(Material.STATIONARY_WATER))
 					|| b.getType().equals(Material.AIR) || b.isLiquid()) {
 				if (args.length > 1 && args[1].equalsIgnoreCase("yes"))
