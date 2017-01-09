@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+@SuppressWarnings(value = { "all" })
 final class HomeSQL extends HomeStorage {
 	// TODO: WORK IN PROGRESS
 	/*
