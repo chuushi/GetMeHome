@@ -2,11 +2,7 @@ package com.simonorj.mc.getmehome;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -31,9 +27,8 @@ final class HomeYAML extends HomeStorage {
         homeFile = new File(plugin.getDataFolder(), "homes.yml");
 
         if (!homeFile.exists()) {
-            homeFile.getParentFile().mkdirs();
             plugin.saveResource("homes.yml", false);
-         }
+        }
 
         hc = new YamlConfiguration();
         try {
@@ -108,7 +103,7 @@ final class HomeYAML extends HomeStorage {
 	}
 
 	@Override
-	int getHomesSet(Player player) {
+	int getNumberOfHomes(Player player) {
 		// Size of configuration
 		return hc.getConfigurationSection(player.getUniqueId() + ".h")
 				.getKeys(false).size();
@@ -124,7 +119,7 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	HashMap<String,Location> getAllHomes(Player player) {
+	Map<String,Location> getAllHomes(Player player) {
 		ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
 		HashMap<String,Location> ret = new HashMap<>();
 		if (cs == null)
@@ -151,14 +146,8 @@ final class HomeYAML extends HomeStorage {
 	}
 	
 	@Override
-	HashMap<UUID, HashMap<String, Location>> getEntireList() {
+	Map<UUID, Map<String, Location>> getEntireList() {
 		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	Exception getError() {
-		// There can never be an error in here.
 		return null;
 	}
 }

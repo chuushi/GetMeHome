@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -20,7 +21,7 @@ abstract class HomeStorage {
     abstract void onDisable();
 
 	/**
-	 * Gets home of a player in form of Bukkit's Location class.
+	 * Gets home of a player in form of Location.
 	 * @param player Player for UUID
 	 * @param name Name of the home
 	 * @return Location of the player home. null if no such home.
@@ -52,7 +53,7 @@ abstract class HomeStorage {
 	 * @param player Player for UUID
 	 * @return number of homes 
 	 */
-	abstract int getHomesSet(Player player);
+	abstract int getNumberOfHomes(Player player);
 	
 	/**
 	 * Deletes the home of a player.
@@ -68,7 +69,7 @@ abstract class HomeStorage {
 	 * @return HashMap of home names to locations.  Empty set if player has no homes.
 	 * This assumes the specified Player is a valid player, thus it never returns null.
 	 */
-	abstract HashMap<String,Location> getAllHomes(Player player);
+	abstract Map<String,Location> getAllHomes(Player player);
 
 	/**
 	 * Gets the entire list of homes.  This should be used only for moving the storage method/type.
@@ -76,11 +77,5 @@ abstract class HomeStorage {
 	 * @deprecated Better off using "import" instead.
 	 */
 	@Deprecated
-	abstract HashMap<UUID,HashMap<String,Location>> getEntireList();
-
-	/**
-	 * Checks if the plugin can connect to the storage/database server/file. Can be called every time an action fails.
-	 * @return Error exception
-	 */
-	abstract Exception getError();
+	abstract Map<UUID,Map<String,Location>> getEntireList();
 }

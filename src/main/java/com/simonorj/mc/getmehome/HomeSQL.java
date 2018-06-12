@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -95,7 +96,7 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	int getHomesSet(Player player) {
+	int getNumberOfHomes(Player player) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -107,19 +108,13 @@ final class HomeSQL extends HomeStorage {
 	}
 
 	@Override
-	HashMap<String, Location> getAllHomes(Player player) {
+	Map<String, Location> getAllHomes(Player player) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	HashMap<UUID, HashMap<String, Location>> getEntireList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	Exception getError() {
+	Map<UUID, Map<String, Location>> getEntireList() {
 		// TODO Auto-generated method stub
 		return null;
 	}
