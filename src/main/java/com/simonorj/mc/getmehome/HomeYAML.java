@@ -150,4 +150,9 @@ final class HomeYAML extends HomeStorage {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    void clearCache() {
+        // TODO Auto-generated method stub
+    }
 }

@@ -85,4 +85,6 @@ abstract class HomeStorage {
      */
     @Deprecated
     abstract Map<UUID, Map<String, Location>> getEntireList();
+
+    abstract void clearCache();
 }

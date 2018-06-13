@@ -1,13 +1,7 @@
 package com.simonorj.mc.getmehome;
 
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,28 +24,35 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public final class HereIsYourHome extends JavaPlugin {
     private HomeStorage storage = null;
-    private Map<String, Integer> homeSetLimit = new HashMap<>();
-    private int defaultHomeSetLimit = 1;
-    private Map<UUID, HashMap<String, Location>> playerHomeCache;
-    private Set<UUID> playerAllCached;
+    private List<HomeLimit> homeLimit;
+    private int defaultLimit;
+
+    private final class HomeLimit {
+        private final String permission;
+        private final int limit;
+        HomeLimit(String permission, int limit) {
+            this.permission = permission;
+            this.limit = limit;
+        }
+        public String getPermission() {
+            return permission;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+    }
 
     @Override
     public void onEnable() {
         // Get config
         saveDefaultConfig();
-
         loadConfiguration();
+
         loadStorage();
 
-        if (loadError != null) {
-            getLogger().warning("Configuration wasn't set properly:");
-            for (String s : loadError) {
-                getLogger().warning("- " + s);
-            }
-            getServer().getPluginManager().disablePlugin(this);
-        } else
-            getServer().getPluginManager().registerEvents(new SavingDetector(), this);
-
+        getServer().getPluginManager().registerEvents(new SavingDetector(), this);
     }
 
     @Override
@@ -61,96 +62,50 @@ public final class HereIsYourHome extends JavaPlugin {
     }
 
     private void loadConfiguration() {
-        if (!getConfig().contains("limit.default"))
-            err.add(getConfig().contains("limit") ? "limit is empty" : "limit.default is not set");
+        homeLimit = new ArrayList<>();
+
+        if (!getConfig().contains("limit.default") || !getConfig().isInt("limit.default"))
+            getLogger().warning("Configuration invalid or missing: limit.default");
         else {
             ConfigurationSection csl = getConfig().getConfigurationSection("limit");
 
-            // Must be Linked
-            for (String s : (LinkedHashSet<String>) csl.getKeys(true)) {
-                // Skip "default" entry
+            defaultLimit = csl.getInt("default");
+
+            for (String s : csl.getKeys(true)) {
+                // Skip default and non-number node
                 if (s.equals("default") || !csl.isInt(s))
                     continue;
+
                 // put it in
-                homeSetLimit.put(s, csl.getInt(s));
+                homeLimit.add(new HomeLimit(s, csl.getInt(s)));
             }
-            // get default entry
-            defaultHomeSetLimit = csl.getInt("default");
         }
     }
 
-    private void clearHomeCache() {
-        playerHomeCache = new LinkedHashMap<>();
-        playerAllCached = new HashSet<>();
-    }
-
     private void loadStorage() {
-        Set<String> err = new HashSet<>();
-        clearHomeCache();
-
-        // Storage
         if (!getConfig().contains("storage.type"))
-            err.add(getConfig().contains("storage") ? "storage is empty" : "storage.type is not set");
+            getLogger().warning(getConfig().contains("storage") ? "storage is empty" : "storage.type is not set");
         else {
             ConfigurationSection cs = getConfig().getConfigurationSection("storage");
             String type = cs.getString("type");
 
-            if (type.equalsIgnoreCase("yaml"))
-                storage = new HomeYAML(this);
-            else if (type.equalsIgnoreCase("mysql")) {
-                if (!cs.contains("database"))
-                    err.add("storage.database is empty");
-                storage = new HomeSQL(this, true);
-            } else if (type.equalsIgnoreCase("sqlite")) {
-                storage = new HomeSQL(this, false);
+            if (type.equalsIgnoreCase("mysql")) {
+                if (cs.contains("database")) {
+                    getLogger().warning("storage.database is empty. Using YAML storage method.");
+                } else {
+                    storage = new HomeSQL(this);
+                    return;
+                }
+            } else if (!type.equalsIgnoreCase("yaml")) {
+                    getLogger().warning("storage.type contains illegal type. Using YAML storage method.");
             }
 
-            if (storage == null) {
-                err.add("storage.type contains illegal type");
-            }
+            storage = new HomeYAML(this);
         }
-
-        if (err.size() != 0) {
-            if (loadError == null)
-                loadError = err;
-            else
-                loadError.addAll(err);
-        }
-    }
-
-    private String tagMsg(String msg) {
-        return TAG + ' ' + msg;
-    }
-
-    private TextComponent tagMsg(TextComponent msg) {
-        TextComponent tag = new TextComponent(TAG);
-        tag.addExtra(" ");
-        tag.addExtra(msg);
-        return tag;
     }
 
     private Location getHome(Player p, String n) {
-        HashMap<String, Location> pHomes = playerHomeCache.get(p.getUniqueId());
-
-        // Master cache has player and player has home
-        if (pHomes != null && pHomes.containsKey(n))
-            return pHomes.get(n);
-
-
-        // Cache doesn't have player
-        if (pHomes == null) {
-            pHomes = new HashMap<>();
-            playerHomeCache.put(p.getUniqueId(), pHomes);
-        }
-
-        // get from storage
-        Location loc = storage.getHome(p, n);
-
-        // player has the named home
-        if (loc != null)
-            pHomes.put(n, loc);
-
-        return loc;
+        return storage.getHome(p, n);
     }
 
     private boolean setHome(Player p, String n) {
@@ -159,21 +114,12 @@ public final class HereIsYourHome extends JavaPlugin {
                 || !storage.setHome(p, n))
             return false;
 
-        // Put it in cache
-        playerHomeCache.get(p.getUniqueId()).put(n, p.getLocation());
-
+        storage.setHome(p, n);
         return true;
     }
 
     private boolean deleteHome(Player p, String n) {
-        // Delete from storage
-        if (!storage.deleteHome(p, n))
-            return false;
-        // Delete from cache
-        HashMap<String, Location> rm = playerHomeCache.get(p.getUniqueId());
-        if (rm != null)
-            rm.remove(n);
-        return true;
+        return storage.deleteHome(p, n);
     }
 
     // exclusive: excludes currently set home from count
@@ -190,50 +136,34 @@ public final class HereIsYourHome extends JavaPlugin {
 
     private int getSetLimit(Player p) {
         // Override if has permission node
-        for (Map.Entry<String, Integer> e : homeSetLimit.entrySet()) {
-            if (p.hasPermission(e.getKey())) {
-                return e.getValue();
+        for (HomeLimit l : homeLimit) {
+            if (p.hasPermission(l.getPermission())) {
+                return l.getLimit();
             }
         }
-        return defaultHomeSetLimit;
+        return defaultLimit;
     }
 
-    private HashMap<String, Location> listHomes(Player p) {
-        final UUID u = p.getUniqueId();
-        if (playerAllCached.contains(u))
-            return playerHomeCache.get(u);
-
-        HashMap<String, Location> r = storage.getAllHomes(p);
-        playerHomeCache.put(u, r);
-        playerAllCached.add(u);
-        return r;
-    }
-
-    private boolean hasSendError(CommandSender p) {
-        final Exception e = storage.getError();
-        if (e == null)
-            return false;
-        p.sendMessage(tagMsg(ERROR));
-        e.printStackTrace();
-        return true;
+    private Map<String, Location> listHomes(Player p) {
+        return storage.getAllHomes(p);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("getmehome")) {
             if (args.length == 0) {
-                sender.sendMessage(tagMsg(ChatColor.WHITE + "Version " + getDescription().getVersion()));
-                sender.sendMessage(TAG_COLOR + "> " + ChatColor.WHITE + "by " + getDescription().getAuthors().get(0));
-                // Display help message
+                sender.sendMessage(ChatColor.WHITE + "GetMeHome Version: " + getDescription().getVersion());
+                sender.sendMessage(ChatColor.WHITE + "by " + getDescription().getAuthors().get(0));
+                // Display list of commands
                 return true;
             }
 
             if (args[0].equalsIgnoreCase("ClearCache")) {
-                sender.sendMessage(tagMsg(ChatColor.WHITE + "Version " + getDescription().getVersion()));
-                clearHomeCache();
+                storage.clearCache();
             }
 
             // Reload-related
+            // TODO: Rewrite this mess
             boolean rc = args[0].equalsIgnoreCase("reloadconfig"),
                     rs = args[0].equalsIgnoreCase("reloadstorage");
             if (args[0].equalsIgnoreCase("reload")
@@ -306,7 +236,7 @@ public final class HereIsYourHome extends JavaPlugin {
 
         if (cmd.getName().equalsIgnoreCase("listhomes")) {
             // Get the homes
-            HashMap<String, Location> map = listHomes(p);
+            Map<String, Location> map = storage.getAllHomes(p);
 
             // Emptiness
             if (map == null || map.size() == 0) {

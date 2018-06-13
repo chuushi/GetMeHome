@@ -58,14 +58,10 @@ final class HomeSQL extends HomeStorage {
     private final Connection db;
 
     // PlaceHolder
-    HomeSQL(final HereIsYourHome plugin, boolean server) {
+    HomeSQL(final HereIsYourHome plugin) {
         try {
             String url = null, user = null, password = null;
-            if (server) {
-                Class.forName("com.mysql.jdbc.Driver");
-            } else {
-                url = "";
-            }
+            Class.forName("com.mysql.jdbc.Driver");
             DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException | SQLException e) {
             // TODO Auto-generated catch block
@@ -117,5 +113,10 @@ final class HomeSQL extends HomeStorage {
     Map<UUID, Map<String, Location>> getEntireList() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    void clearCache() {
+        // TODO Auto-generated method stub
     }
 }

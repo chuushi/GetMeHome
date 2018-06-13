@@ -3,28 +3,30 @@
 # https://github.com/SimonOrJ/GetMeHome #
 
 storage:
-# type - Format to save homes as. Possible values:
-# YAML    Save it as homes.yml file. Good for small servers.
-# MySQL   Save it on a MySQL database. Ideal for huge player base.
-    type: YAML
+  # type - Format to save homes as. Possible values:
+  # YAML    Save it as homes.yml file. Good for small servers.
+  # MySQL   Save it on a MySQL database. Ideal for huge player base.
+  type: YAML
   
-# YAML:
-# should the plugin save player names with their UUID?
-# This is only for your reference when looking through the file.
-    savename: true
+  # YAML:
+  # should the plugin save player names with their UUID?
+  # This is only for your reference when looking through the file.
+  savename: true
   
-# MySQL:
-    database: minecraft
-    username: username
-    password: password
-    prefix: gmh_
+  # MySQL:
+  database: minecraft
+  username: username
+  password: password
+  prefix: gmh_
 
 # Maximum distance away from home point for "Welcome home" message to not show on /home
 welcomeHomeRadius: 4;
 
 limit:
-# default - default home limit.
-    default: 1
-# The rest of the home limit can be listed in this format:
-#   permission.node: maximum number of homes
-    gmh.twohomes: 2
+  # default - default home limit. This is required.
+  default: 1
+
+  # The rest of the home limit can be listed in this format:
+  #   permission.node: maximum number of homes
+  ### Permission on top of this list will be checked first! ###
+  gmh.twohomes: 2
