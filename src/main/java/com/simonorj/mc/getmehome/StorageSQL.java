@@ -3,8 +3,6 @@ package com.simonorj.mc.getmehome;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,7 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 @SuppressWarnings(value = {"all"})
-final class HomeSQL extends HomeStorage {
+final class StorageSQL extends HomeStorage {
     // TODO: WORK IN PROGRESS
     /*
      * The tables:
@@ -58,7 +56,7 @@ final class HomeSQL extends HomeStorage {
     private final Connection db;
 
     // PlaceHolder
-    HomeSQL(final HereIsYourHome plugin) {
+    StorageSQL(final GetMeHome plugin) {
         try {
             String url = null, user = null, password = null;
             Class.forName("com.mysql.jdbc.Driver");
@@ -74,7 +72,7 @@ final class HomeSQL extends HomeStorage {
     }
 
     @Override
-    void onDisable() {
+    void save() {
         // TODO Auto-generated method stub
 
     }
@@ -83,6 +81,16 @@ final class HomeSQL extends HomeStorage {
     Location getHome(Player player, String name) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    String getDefaultHomeName(Player player) {
+        return null;
+    }
+
+    @Override
+    boolean setDefaultHome(Player player, String name) {
+        return false;
     }
 
     @Override

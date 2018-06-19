@@ -1,11 +1,10 @@
 package com.simonorj.mc.getmehome;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This is a superclass(?) for accessing file/database storage of homes.
@@ -16,9 +15,9 @@ import org.bukkit.entity.Player;
  */
 abstract class HomeStorage {
     /**
-     * Run before shutting down the server (such as disconnect or save)
+     * Save to database
      */
-    abstract void onDisable();
+    abstract void save();
 
     /**
      * Gets home of a player in form of Location.
@@ -28,6 +27,13 @@ abstract class HomeStorage {
      * @return Location of the player home. null if no such home.
      */
     abstract Location getHome(Player player, String name);
+
+    /**
+     * Gets name of the default home.
+     * @param player Player to find home of
+     * @return home name. null if no (default) home is set.
+     */
+    abstract String getDefaultHomeName(Player player);
 
     /**
      * Sets home of a player to their Location.
@@ -40,6 +46,14 @@ abstract class HomeStorage {
     boolean setHome(Player player, String name) {
         return setHome(player, name, player.getLocation());
     }
+
+    /**
+     * Sets a different home as a default home
+     * @param player Player name
+     * @param name Home name
+     * @return if name of home exists
+     */
+    abstract boolean setDefaultHome(Player player, String name);
 
     /**
      * Sets home of a player to the specified Location.
@@ -87,4 +101,5 @@ abstract class HomeStorage {
     abstract Map<UUID, Map<String, Location>> getEntireList();
 
     abstract void clearCache();
+
 }

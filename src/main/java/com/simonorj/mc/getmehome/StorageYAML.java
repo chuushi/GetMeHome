@@ -3,6 +3,7 @@ package com.simonorj.mc.getmehome;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,13 +12,29 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-final class HomeYAML extends HomeStorage {
+final class StorageYAML extends HomeStorage {
     private final File homeFile;
     private final FileConfiguration hc;
-    private final HereIsYourHome plugin;
+    private final GetMeHome plugin;
     private final boolean saveName;
 
-    HomeYAML(HereIsYourHome pl) {
+    /*
+     * Home structure:
+     * UUID:
+     *   n: PLAYER NAME
+     *   d: DEFAULT HOME NAME
+     *   h:
+     *     HOMENAME:
+     *       c:
+     *       - X
+     *       - Y
+     *       - Z
+     *       y:
+     *       - YAW
+     *       - PITCH
+     */
+
+    StorageYAML(GetMeHome pl) {
         plugin = pl;
 
         // Variable setup
@@ -40,12 +57,11 @@ final class HomeYAML extends HomeStorage {
     }
 
     @Override
-    void onDisable() {
+    void save() {
         try {
             hc.save(homeFile);
         } catch (IOException e) {
             plugin.getLogger().warning("GetMeHome: Homes failed to save!");
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -67,6 +83,19 @@ final class HomeYAML extends HomeStorage {
                 y.next(),
                 y.next()
         );
+    }
+
+    @Override
+    String getDefaultHomeName(Player player) {
+        return hc.getString(player.getUniqueId().toString() + ".d");
+    }
+
+    @Override
+    boolean setDefaultHome(Player player, String name) {
+        if (hc.getConfigurationSection(player.getUniqueId().toString() + ".h." + name) == null)
+            return false;
+        hc.set(player.getUniqueId().toString() + ".d", name);
+        return true;
     }
 
     @Override
@@ -122,6 +151,7 @@ final class HomeYAML extends HomeStorage {
     Map<String, Location> getAllHomes(Player player) {
         ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
         HashMap<String, Location> ret = new HashMap<>();
+
         if (cs == null)
             return ret;
         for (String n : cs.getKeys(true)) {
