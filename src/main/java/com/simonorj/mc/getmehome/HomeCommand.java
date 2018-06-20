@@ -6,9 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 // sethome, delhome, home
 public class HomeCommand implements TabExecutor {
@@ -28,6 +26,8 @@ public class HomeCommand implements TabExecutor {
         }
 
         Player p = (Player) sender;
+        String[] temp = p.spigot().getLocale().split("_");
+        ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", new Locale(temp[0], temp[1]));
 
         String home;
 
@@ -38,7 +38,7 @@ public class HomeCommand implements TabExecutor {
             Location loc = storage.getHome(p, home);
             // No home
             if (loc == null) {
-                p.sendMessage("Home not found!");
+                p.sendMessage(String.format(localize.getString("commands.delhome.doesNotExist"), home));
                 return true;
             }
 
@@ -50,37 +50,45 @@ public class HomeCommand implements TabExecutor {
                 farAway = dist > 25;
 
             if (farAway)
-                p.sendMessage("Welcome Home.");
+                p.sendMessage(localize.getString("commands.home.success"));
 
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("sethome")) {
             int limit = plugin.getSetLimit(p);
-            if (plugin.getSetLimit(p) > storage.getNumberOfHomes(p)) {
+            boolean allow;
+            boolean homeExists;
+            if (homeExists = storage.getHome(p, home) != null)
+                allow = limit >= storage.getNumberOfHomes(p);
+            else
+                allow = limit > storage.getNumberOfHomes(p);
+
+            if (allow) {
                 if (storage.setHome(p, home))
-                    p.sendMessage("Home set.");
+                    if (homeExists) p.sendMessage(String.format(localize.getString("commands.sethome.relocate"), home));
+                    else p.sendMessage(String.format(localize.getString("commands.sethome.new"), home));
                 else
-                    p.sendMessage("Home can't be set here.");
+                    p.sendMessage(localize.getString("commands.sethome.badLocation"));
             }
             else
-                p.sendMessage("Home limit reached. Overwrite old home or delete homes. Your limit: " + limit);
+                p.sendMessage(String.format(localize.getString("commands.sethome.reachedLimit"), String.valueOf(limit)));
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
             if (storage.setDefaultHome(p, home))
-                p.sendMessage("Default home set.");
+                p.sendMessage(String.format(localize.getString("commands.setdefaulthome"), home));
             else
-                p.sendMessage("Home not found.");
+                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("deletehome")) {
             if (storage.deleteHome(p, home))
-                p.sendMessage("Home deleted.");
+                p.sendMessage(String.format(localize.getString("commands.delhome"), home));
             else
-                p.sendMessage("Home not found.");
+                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
             return true;
         }
         return false;

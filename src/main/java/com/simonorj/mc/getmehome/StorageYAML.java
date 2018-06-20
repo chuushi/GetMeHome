@@ -87,7 +87,10 @@ final class StorageYAML extends HomeStorage {
 
     @Override
     String getDefaultHomeName(Player player) {
-        return hc.getString(player.getUniqueId().toString() + ".d");
+        String ret = hc.getString(player.getUniqueId().toString() + ".d");
+        if (ret == null)
+            return "default";
+        return ret;
     }
 
     @Override
