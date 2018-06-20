@@ -99,7 +99,7 @@ public class HomeCommand implements TabExecutor {
         if (!(sender instanceof Player))
             return Collections.emptyList();
 
-        if (args.length == 0)
+        if (args.length != 1)
             return new ArrayList<>(storage.getAllHomes((Player)sender).keySet());
 
         List<String> ret = new ArrayList<>();
