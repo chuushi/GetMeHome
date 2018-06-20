@@ -137,8 +137,10 @@ final class StorageYAML extends HomeStorage {
     @Override
     int getNumberOfHomes(Player player) {
         // Size of configuration
-        return hc.getConfigurationSection(player.getUniqueId() + ".h")
-                .getKeys(false).size();
+        ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
+        if (cs == null)
+            return 0;
+        return cs.getKeys(false).size();
     }
 
     @Override

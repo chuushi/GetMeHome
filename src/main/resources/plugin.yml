@@ -2,7 +2,7 @@ name: GetMeHome
 version: ${project.version}
 author: SimonOrJ
 description: Simple home plugin that just gets you home. Nothing more.
-main: com.simonorj.mc.getmehome.HereIsYourHome
+main: com.simonorj.mc.getmehome.GetMeHome
 website: http://github.com/SimonOrJ/GetMeHome
 
 commands:
@@ -17,6 +17,10 @@ commands:
     aliases: [seth, homeset]
     description: Sets home at your current position
     usage: /sethome [home name]
+  setdefaulthome:
+    aliases: [defaulthome]
+    description: Sets a home name as a default home.
+    usage: /setdefaulthome <home name>
   deletehome:
     aliases: [deleteh, delhome, delh, homedelete, homed]
     description: Delets a set home

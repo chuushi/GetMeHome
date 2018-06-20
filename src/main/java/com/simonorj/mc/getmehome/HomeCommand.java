@@ -38,7 +38,7 @@ public class HomeCommand implements TabExecutor {
             Location loc = storage.getHome(p, home);
             // No home
             if (loc == null) {
-                p.sendMessage(String.format(localize.getString("commands.delhome.doesNotExist"), home));
+                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
                 return true;
             }
 
