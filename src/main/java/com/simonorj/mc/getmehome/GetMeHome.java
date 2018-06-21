@@ -1,11 +1,15 @@
 package com.simonorj.mc.getmehome;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ClickEvent.Action;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.TranslatableComponent;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,12 +20,15 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class GetMeHome extends JavaPlugin {
     private HomeStorage storage;
     private List<HomePermissionLimit> homePermissionLimit;
     private int defaultLimit;
+    private ChatColor color;
+    private boolean italic, bold, underline;
 
     private final class HomePermissionLimit {
         private final String permission;
@@ -47,7 +54,7 @@ public final class GetMeHome extends JavaPlugin {
         loadConfiguration();
         loadStorage();
 
-        HomeCommand hc = new HomeCommand(this, storage);
+        HomeCommand hc = new HomeCommand(this);
         getCommand("home").setExecutor(hc);
         getCommand("sethome").setExecutor(hc);
         getCommand("setdefaulthome").setExecutor(hc);
@@ -56,6 +63,9 @@ public final class GetMeHome extends JavaPlugin {
         getCommand("sethome").setTabCompleter(hc);
         getCommand("setdefaulthome").setTabCompleter(hc);
         getCommand("delhome").setTabCompleter(hc);
+
+        getCommand("getmehome").setTabCompleter(new GetMeHomeTab());
+        getCommand("listhomes").setExecutor(new ListHomesCommand(this));
 
         getServer().getPluginManager().registerEvents(new SavingDetector(), this);
     }
@@ -69,22 +79,28 @@ public final class GetMeHome extends JavaPlugin {
     private void loadConfiguration() {
         homePermissionLimit = new ArrayList<>();
 
-        if (!getConfig().contains("limit.default") || !getConfig().isInt("limit.default"))
-            getLogger().warning("Configuration invalid or missing: limit.default");
-        else {
-            ConfigurationSection csl = getConfig().getConfigurationSection("limit");
+        defaultLimit = getConfig().getInt("limit.default", 1);
+        ConfigurationSection csl = getConfig().getConfigurationSection("limit");
 
-            defaultLimit = csl.getInt("default");
-
-            for (String s : csl.getKeys(true)) {
-                // Skip default and non-number node
-                if (s.equals("default") || !csl.isInt(s))
-                    continue;
-
-                // put it in
-                homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
-            }
+        if (csl == null) {
+            getLogger().warning("Configuration invalid or missing: limit");
+            return;
         }
+
+
+        for (String s : csl.getKeys(true)) {
+            // Skip default and non-number node
+            if (s.equals("default") || !csl.isInt(s))
+                continue;
+
+            // put it in
+            homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
+        }
+
+        color = ChatColor.getByChar(getConfig().getString("formatting.color", "e").charAt(0));
+        italic =    getConfig().getBoolean("formatting.italic");
+        bold =      getConfig().getBoolean("formatting.bold");
+        underline = getConfig().getBoolean("formatting.underline");
     }
 
     private void loadStorage() {
@@ -109,6 +125,60 @@ public final class GetMeHome extends JavaPlugin {
         }
     }
 
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (cmd.getName().equalsIgnoreCase("getmehome")) {
+            if (args.length == 0) {
+                messageTo(sender, "GetMeHome Version: " + getDescription().getVersion());
+                messageTo(sender, "by " + getDescription().getAuthors().get(0));
+                // Display list of commands
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("reload")) {
+                if (storage instanceof StorageYAML) {
+                    if (args.length != 2 || !(args[1].equalsIgnoreCase("yes") || args[1].equalsIgnoreCase("no"))) {
+                        BaseComponent prompt = new TextComponent("GetMeHome: Overwrite homes.yml? ");
+
+                        BaseComponent yes = new TranslatableComponent("gui.yes");
+                        yes.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + label + " " + args[0] +" yes"));
+                        yes.setColor(ChatColor.AQUA);
+
+                        BaseComponent no = new TranslatableComponent("gui.no");
+                        no.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + label + " " + args[0] +" no"));
+                        no.setColor(ChatColor.AQUA);
+
+                        prompt.addExtra(yes);
+                        prompt.addExtra(" ");
+                        prompt.addExtra(no);
+
+                        messageTo(sender, prompt);
+                        return true;
+                    }
+                }
+                reloadConfig();
+                loadConfiguration();
+                if (!(storage instanceof StorageYAML && args.length == 2 && args[1].equalsIgnoreCase("no")))
+                    storage.save();
+                loadStorage();
+
+                messageTo(sender, "GetMeHome: " + ChatColor.GREEN + "Configuration reloaded successfully.");
+
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("clearcache")) {
+                storage.clearCache();
+                messageTo(sender, "GetMeHome: Cache cleared.");
+            }
+        }
+        return false;
+    }
+
+    HomeStorage getStorage() {
+        return storage;
+    }
+
     int getSetLimit(Player p) {
         // Override if has permission node
         for (HomePermissionLimit l : homePermissionLimit) {
@@ -119,74 +189,42 @@ public final class GetMeHome extends JavaPlugin {
         return defaultLimit;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("getmehome")) {
-            if (args.length == 0) {
-                sender.sendMessage(ChatColor.WHITE + "GetMeHome Version: " + getDescription().getVersion());
-                sender.sendMessage(ChatColor.WHITE + "by " + getDescription().getAuthors().get(0));
-                // Display list of commands
-                return true;
-            }
+    void messageTo(CommandSender sender, BaseComponent msg) {
+        msg.setColor(color);
+        msg.setItalic(italic);
+        msg.setBold(bold);
+        msg.setUnderlined(underline);
 
-            if (args[0].equalsIgnoreCase("clearcache")) {
-                storage.clearCache();
-            }
+        if (sender instanceof Player) ((Player)sender).spigot().sendMessage(ChatMessageType.SYSTEM, msg);
+        else sender.sendMessage(msg.toLegacyText());
+    }
 
-            // Reload-related
-            // TODO: Rewrite this mess
-            boolean rc = args[0].equalsIgnoreCase("reloadconfig"),
-                    rs = args[0].equalsIgnoreCase("reloadstorage");
-            if (args[0].equalsIgnoreCase("reload")
-                    || rc || rs) {
-                reloadConfig();
+    void messageTo(CommandSender sender, String msg) {
+        String send = color.toString();
+        if (italic) send += ChatColor.ITALIC;
+        if (bold) send += ChatColor.BOLD;
+        if (underline) send += ChatColor.UNDERLINE;
 
-                // These are correct.
-                if (!rs)
-                    loadConfiguration();
-                if (!rc) {
-                    // MySQL and SQLite should save things right on spot.
-                    if (storage instanceof StorageYAML) {
-                        if (args.length > 1 && args[1].equalsIgnoreCase("yes")) {
-                            if (storage != null)
-                                storage.save();
-                        } else if (args.length == 1 || !args[1].equalsIgnoreCase("no")) {
-                            TextComponent msg = new TextComponent("Save the storage data to homes.yml? ");
-                            TextComponent c = new TextComponent("[Yes]");
-                            c.setColor(ChatColor.GREEN);
-                            c.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND
-                                    , "/" + label + " " + args[0] + " yes"));
-                            msg.addExtra(c);
-                            msg.addExtra(" ");
-                            c = new TextComponent("[No]");
-                            c.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND
-                                    , "/" + label + " " + args[0] + " no"));
-                            c.setColor(ChatColor.RED);
-                            msg.addExtra(c);
-                            if (sender instanceof Player)
-                                ((Player) sender).spigot().sendMessage(msg);
-                            else
-                                sender.sendMessage(msg.toPlainText());
-                            return true;
-                        }
-                    } else {
-                        storage.save();
-                    }
-                    // Delete cache
+        send += msg;
 
-                    loadStorage();
-                }
+        sender.sendMessage(send);
+    }
 
-                sender.sendMessage(new StringBuilder(ChatColor.GREEN.toString()).append(
-                        rc ? "Configuration file"
-                                : rs ? "Storage"
-                                : "All settings"
-                ).append(" reloaded successfully.").toString());
+    public class GetMeHomeTab implements TabCompleter {
+        private final List<String> list;
 
-                return true;
-            }
+        private GetMeHomeTab() {
+             list = new ArrayList<>();
+             list.add("reload");
         }
-        return false;
+
+        @Override
+        public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+            if (sender.hasPermission("getmehome.reload"))
+                return list;
+            else
+                return Collections.emptyList();
+        }
     }
 
     public final class SavingDetector implements Listener {
@@ -194,6 +232,7 @@ public final class GetMeHome extends JavaPlugin {
         public void allOut(PlayerQuitEvent e) {
             if (getServer().getOnlinePlayers().size() <= 1) {
                 storage.save();
+                storage.clearCache();
             }
         }
 

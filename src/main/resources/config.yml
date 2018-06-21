@@ -4,8 +4,8 @@
 
 storage:
   # type - Format to save homes as. Possible values:
-  # YAML    Save it as homes.yml file. Good for small servers.
-  # MySQL   Save it on a MySQL database. Ideal for huge player base.
+  # YAML    Good enough for small servers.
+  # MySQL   Ideal for huge player base.
   type: YAML
   
   # YAML:
@@ -13,17 +13,25 @@ storage:
   # This is only for your reference when looking through the file.
   savename: true
   
-  # MySQL:
+  # For MySQL.
+  # Also, if planning on migrating to MySQL, fill this in.
   database: minecraft
   username: username
   password: password
   prefix: gmh_
 
+formatting:
+  # Accepts only color (0-9,a-f)
+  color: e
+  italic: false
+  bold: false
+  underline: false
+
 # Maximum distance away from home point for "Welcome home" message to not show on /home
 welcomeHomeRadius: 4;
 
 limit:
-  # default - default home limit. This is required.
+  # default - default home limit. If removed, defaults to 1.
   default: 1
 
   # The rest of the home limit can be listed in this format:

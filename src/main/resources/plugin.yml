@@ -7,30 +7,29 @@ website: http://github.com/SimonOrJ/GetMeHome
 
 commands:
   getmehome:
-    aliases: [gmh]
     description: GetMeHome's main (help) command
   home:
     aliases: [h]
     description: Sends you home
     usage: /home [home name]
   sethome:
-    aliases: [seth, homeset]
     description: Sets home at your current position
     usage: /sethome [home name]
   setdefaulthome:
     aliases: [defaulthome]
     description: Sets a home name as a default home.
     usage: /setdefaulthome <home name>
-  deletehome:
-    aliases: [deleteh, delhome, delh, homedelete, homed]
+  delhome:
     description: Delets a set home
     usage: /delhome [home name]
   listhomes:
-    aliases: [listhome, listh, homelist, homel, homes]
-    description: Lists all the homes you have
-    usage: /listhomes
+    description: Lists all the homes
+    usage: /listhomes [player]
 
 permissions:
-  getmehome.admin:
-    description: this player can /kill others.
+  getmehome.reload:
+    description: Configuraiton reload
+    default: op
+  getmehome.otherhome:
+    description: power to list and get coordinates of other's homes
     default: op

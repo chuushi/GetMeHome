@@ -1,16 +1,15 @@
 package com.simonorj.mc.getmehome;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Level;
-
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 final class StorageYAML extends HomeStorage {
     private final File homeFile;
@@ -20,6 +19,9 @@ final class StorageYAML extends HomeStorage {
 
     /*
      * Home structure:
+     * names:
+     *   NAME: UUID
+     *
      * UUID:
      *   n: PLAYER NAME
      *   d: DEFAULT HOME NAME
@@ -67,7 +69,15 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    Location getHome(Player player, String name) {
+    UUID getUniqueID(String player) {
+        String uuid = hc.getString("names." + player.toLowerCase());
+        if (uuid == null)
+            return null;
+        return UUID.fromString(uuid);
+    }
+
+    @Override
+    Location getHome(OfflinePlayer player, String name) {
         ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId().toString() + ".h." + name);
         if (cs == null)
             return null;
@@ -86,7 +96,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    String getDefaultHomeName(Player player) {
+    String getDefaultHomeName(OfflinePlayer player) {
         String ret = hc.getString(player.getUniqueId().toString() + ".d");
         if (ret == null)
             return "default";
@@ -94,7 +104,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    boolean setDefaultHome(Player player, String name) {
+    boolean setDefaultHome(OfflinePlayer player, String name) {
         if (hc.getConfigurationSection(player.getUniqueId().toString() + ".h." + name) == null)
             return false;
         hc.set(player.getUniqueId().toString() + ".d", name);
@@ -102,7 +112,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    boolean setHome(Player player, String name, Location loc) {
+    boolean setHome(OfflinePlayer player, String name, Location loc) {
         String uid = player.getUniqueId().toString();
         // Increment when adding another home
         ConfigurationSection cs = hc.getConfigurationSection(uid);
@@ -111,6 +121,7 @@ final class StorageYAML extends HomeStorage {
         }
 
         // Update name
+        hc.set("names." + player.getName().toLowerCase(), player.getUniqueId().toString());
         if (saveName)
             cs.set("n", player.getName());
 
@@ -135,7 +146,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    int getNumberOfHomes(Player player) {
+    int getNumberOfHomes(OfflinePlayer player) {
         // Size of configuration
         ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
         if (cs == null)
@@ -144,7 +155,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    boolean deleteHome(Player player, String name) {
+    boolean deleteHome(OfflinePlayer player, String name) {
         String path = player.getUniqueId() + ".h." + name;
         if (!hc.contains(path))
             return false;
@@ -153,7 +164,7 @@ final class StorageYAML extends HomeStorage {
     }
 
     @Override
-    Map<String, Location> getAllHomes(Player player) {
+    Map<String, Location> getAllHomes(OfflinePlayer player) {
         ConfigurationSection cs = hc.getConfigurationSection(player.getUniqueId() + ".h");
         HashMap<String, Location> ret = new HashMap<>();
 

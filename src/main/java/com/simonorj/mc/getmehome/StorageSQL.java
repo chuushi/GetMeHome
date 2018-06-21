@@ -1,13 +1,13 @@
 package com.simonorj.mc.getmehome;
 
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
-
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
 @SuppressWarnings(value = {"all"})
 final class StorageSQL extends HomeStorage {
@@ -78,53 +78,54 @@ final class StorageSQL extends HomeStorage {
     }
 
     @Override
-    Location getHome(Player player, String name) {
-        // TODO Auto-generated method stub
+    UUID getUniqueID(String player) {
         return null;
     }
 
     @Override
-    String getDefaultHomeName(Player player) {
+    Location getHome(OfflinePlayer player, String name) {
         return null;
     }
 
     @Override
-    boolean setDefaultHome(Player player, String name) {
+    String getDefaultHomeName(OfflinePlayer player) {
+        return null;
+    }
+
+    @Override
+    boolean setDefaultHome(OfflinePlayer player, String name) {
         return false;
     }
 
     @Override
-    boolean setHome(Player player, String name, Location loc) {
-        // TODO Auto-generated method stub
+    boolean setHome(OfflinePlayer player, String name, Location loc) {
         return false;
     }
 
     @Override
-    int getNumberOfHomes(Player player) {
-        // TODO Auto-generated method stub
+    int getNumberOfHomes(OfflinePlayer player) {
         return 0;
     }
 
     @Override
-    boolean deleteHome(Player player, String name) {
-        // TODO Auto-generated method stub
+    boolean deleteHome(OfflinePlayer player, String name) {
         return false;
     }
 
     @Override
-    Map<String, Location> getAllHomes(Player player) {
-        // TODO Auto-generated method stub
+    Map<String, Location> getAllHomes(OfflinePlayer player) {
         return null;
     }
 
     @Override
     Map<UUID, Map<String, Location>> getEntireList() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     void clearCache() {
-        // TODO Auto-generated method stub
+
     }
+
+
 }

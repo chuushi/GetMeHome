@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome;
 
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -20,20 +21,27 @@ abstract class HomeStorage {
     abstract void save();
 
     /**
+     * Gets UUID from player name
+     * @param player exact name of player to look up
+     * @return UUID of player
+     */
+    abstract UUID getUniqueID(String player);
+
+    /**
      * Gets home of a player in form of Location.
      *
      * @param player Player for UUID
      * @param name   Name of the home
      * @return Location of the player home. null if no such home.
      */
-    abstract Location getHome(Player player, String name);
+    abstract Location getHome(OfflinePlayer player, String name);
 
     /**
      * Gets name of the default home.
      * @param player Player to find home of
      * @return home name. null if no (default) home is set.
      */
-    abstract String getDefaultHomeName(Player player);
+    abstract String getDefaultHomeName(OfflinePlayer player);
 
     /**
      * Sets home of a player to their Location.
@@ -53,7 +61,7 @@ abstract class HomeStorage {
      * @param name Home name
      * @return if name of home exists
      */
-    abstract boolean setDefaultHome(Player player, String name);
+    abstract boolean setDefaultHome(OfflinePlayer player, String name);
 
     /**
      * Sets home of a player to the specified Location.
@@ -63,7 +71,7 @@ abstract class HomeStorage {
      * @param loc    Location of the home
      * @return Success of the saving.
      */
-    abstract boolean setHome(Player player, String name, Location loc);
+    abstract boolean setHome(OfflinePlayer player, String name, Location loc);
 
     /**
      * Gets number of homes set by a player
@@ -71,7 +79,7 @@ abstract class HomeStorage {
      * @param player Player for UUID
      * @return number of homes
      */
-    abstract int getNumberOfHomes(Player player);
+    abstract int getNumberOfHomes(OfflinePlayer player);
 
     /**
      * Deletes the home of a player.
@@ -80,7 +88,7 @@ abstract class HomeStorage {
      * @param name   Name of the home to delete
      * @return Success of the deleting.
      */
-    abstract boolean deleteHome(Player player, String name);
+    abstract boolean deleteHome(OfflinePlayer player, String name);
 
     /**
      * Gets a map of every player's homes.
@@ -89,7 +97,7 @@ abstract class HomeStorage {
      * @return HashMap of home names to locations.  Empty set if player has no homes.
      * This assumes the specified Player is a valid player, thus it never returns null.
      */
-    abstract Map<String, Location> getAllHomes(Player player);
+    abstract Map<String, Location> getAllHomes(OfflinePlayer player);
 
     /**
      * Gets the entire list of homes.  This should be used only for moving the storage method/type.

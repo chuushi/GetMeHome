@@ -11,87 +11,94 @@ import java.util.*;
 // sethome, delhome, home
 public class HomeCommand implements TabExecutor {
     private final GetMeHome plugin;
-    private final HomeStorage storage;
 
-    HomeCommand(GetMeHome plugin, HomeStorage storage) {
+    HomeCommand(GetMeHome plugin) {
         this.plugin = plugin;
-        this.storage = storage;
+    }
+
+    private HomeStorage getStorage() {
+        return plugin.getStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, final Command cmd, String label, final String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("You must be a player!");
+            sender.sendMessage("You must be a player.");
             return true;
         }
 
-        Player p = (Player) sender;
+        final Player p = (Player) sender;
         String[] temp = p.spigot().getLocale().split("_");
-        ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", new Locale(temp[0], temp[1]));
+        final ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", new Locale(temp[0], temp[1]));
 
-        String home;
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+            @Override
+            public void run() {
+                String home;
 
-        if (args.length != 0) home = args[0];
-        else home = storage.getDefaultHomeName(p);
+                if (args.length != 0) home = args[0];
+                else home = getStorage().getDefaultHomeName(p);
 
-        if (cmd.getName().equalsIgnoreCase("home")) {
-            Location loc = storage.getHome(p, home);
-            // No home
-            if (loc == null) {
-                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
-                return true;
+                if (cmd.getName().equalsIgnoreCase("home")) {
+                    Location loc = getStorage().getHome(p, home);
+                    // No home
+                    if (loc == null) {
+                        plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
+                        return;
+                    }
+
+                    // Welcome home!
+                    int dist = new Double(loc.distanceSquared(p.getLocation())).intValue();
+                    p.teleport(loc);
+                    boolean farAway = true;
+                    if (p.getWorld().equals(loc.getWorld()))
+                        farAway = dist > 25;
+
+                    if (farAway)
+                        plugin.messageTo(p, localize.getString("commands.home.success"));
+
+                    return;
+                }
+
+                if (cmd.getName().equalsIgnoreCase("sethome")) {
+                    int limit = plugin.getSetLimit(p);
+                    boolean allow;
+                    boolean homeExists;
+                    if (homeExists = getStorage().getHome(p, home) != null)
+                        allow = limit >= getStorage().getNumberOfHomes(p);
+                    else
+                        allow = limit > getStorage().getNumberOfHomes(p);
+
+                    if (allow) {
+                        if (getStorage().setHome(p, home))
+                            if (homeExists)
+                                plugin.messageTo(p, String.format(localize.getString("commands.sethome.relocate"), home));
+                            else plugin.messageTo(p, String.format(localize.getString("commands.sethome.new"), home));
+                        else
+                            plugin.messageTo(p, localize.getString("commands.sethome.badLocation"));
+                    } else
+                        plugin.messageTo(p, String.format(localize.getString("commands.sethome.reachedLimit"), String.valueOf(limit)));
+                    return;
+                }
+
+                if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
+                    if (getStorage().setDefaultHome(p, home))
+                        plugin.messageTo(p, String.format(localize.getString("commands.setdefaulthome"), home));
+                    else
+                        plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
+                    return;
+                }
+
+                if (cmd.getName().equalsIgnoreCase("delhome")) {
+                    if (getStorage().deleteHome(p, home))
+                        plugin.messageTo(p, String.format(localize.getString("commands.delhome"), home));
+                    else
+                        plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
+                    return;
+                }
             }
-
-            // Welcome home!
-            int dist = new Double(loc.distanceSquared(p.getLocation())).intValue();
-            p.teleport(loc);
-            boolean farAway = true;
-            if (p.getWorld().equals(loc.getWorld()))
-                farAway = dist > 25;
-
-            if (farAway)
-                p.sendMessage(localize.getString("commands.home.success"));
-
-            return true;
-        }
-
-        if (cmd.getName().equalsIgnoreCase("sethome")) {
-            int limit = plugin.getSetLimit(p);
-            boolean allow;
-            boolean homeExists;
-            if (homeExists = storage.getHome(p, home) != null)
-                allow = limit >= storage.getNumberOfHomes(p);
-            else
-                allow = limit > storage.getNumberOfHomes(p);
-
-            if (allow) {
-                if (storage.setHome(p, home))
-                    if (homeExists) p.sendMessage(String.format(localize.getString("commands.sethome.relocate"), home));
-                    else p.sendMessage(String.format(localize.getString("commands.sethome.new"), home));
-                else
-                    p.sendMessage(localize.getString("commands.sethome.badLocation"));
-            }
-            else
-                p.sendMessage(String.format(localize.getString("commands.sethome.reachedLimit"), String.valueOf(limit)));
-            return true;
-        }
-
-        if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
-            if (storage.setDefaultHome(p, home))
-                p.sendMessage(String.format(localize.getString("commands.setdefaulthome"), home));
-            else
-                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
-            return true;
-        }
-
-        if (cmd.getName().equalsIgnoreCase("deletehome")) {
-            if (storage.deleteHome(p, home))
-                p.sendMessage(String.format(localize.getString("commands.delhome"), home));
-            else
-                p.sendMessage(String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
-            return true;
-        }
-        return false;
+        });
+        return true;
     }
 
     @Override
@@ -100,11 +107,11 @@ public class HomeCommand implements TabExecutor {
             return Collections.emptyList();
 
         if (args.length != 1)
-            return new ArrayList<>(storage.getAllHomes((Player)sender).keySet());
+            return new ArrayList<>(getStorage().getAllHomes((Player) sender).keySet());
 
         List<String> ret = new ArrayList<>();
 
-        for (String n : storage.getAllHomes((Player)sender).keySet()) {
+        for (String n : getStorage().getAllHomes((Player) sender).keySet()) {
             if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
                 ret.add(n);
             }
