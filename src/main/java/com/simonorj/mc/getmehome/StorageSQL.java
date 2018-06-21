@@ -3,13 +3,10 @@ package com.simonorj.mc.getmehome;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Map;
 import java.util.UUID;
 
-@SuppressWarnings(value = {"all"})
 final class StorageSQL extends HomeStorage {
     // TODO: WORK IN PROGRESS
     /*
@@ -50,30 +47,32 @@ final class StorageSQL extends HomeStorage {
      *       INSERT INTO _homes
      */
 
-    private static final String SQL_GET_HOME = "SELECT ";
-    private static final String SQL_SET = "UPDATE";
-    private static final String SQL_NEW = "UPDATE";
-    private final Connection db;
+    private final String url;
+    private final String username;
+    private final String password;
+    private final String prefix;
 
     // PlaceHolder
-    StorageSQL(final GetMeHome plugin) {
+    StorageSQL(final GetMeHome plugin) throws IllegalStateException, SQLException {
         try {
-            String url = null, user = null, password = null;
             Class.forName("com.mysql.jdbc.Driver");
-            DriverManager.getConnection(url, user, password);
-        } catch (ClassNotFoundException | SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Cannot find the driver in the classpath!", e);
         }
 
+        this.url = "jdbc:mysql://" + plugin.getConfig().getString("storage.hostname") + "/" + plugin.getConfig().getString("storage.database");
+        this.username = plugin.getConfig().getString("storage.username");
+        this.password = plugin.getConfig().getString("storage.password", "");
+        this.prefix = plugin.getConfig().getString("storage.prefix", "gmh_");
 
-        // INCOMPLETE
-        throw new RuntimeException();
+        // Test the connection: can throw SQLException
+        Connection connection = DriverManager.getConnection(url, username, password);
+        connection.close();
     }
 
     @Override
     void save() {
-        // TODO Auto-generated method stub
+        // nothing?
 
     }
 
@@ -84,6 +83,11 @@ final class StorageSQL extends HomeStorage {
 
     @Override
     Location getHome(OfflinePlayer player, String name) {
+        String sql = "SELECT defaulthome FROM " + prefix + "blah WHERE uuid = ? LIMIT 1";
+        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot connect the database!", e);
+        }
         return null;
     }
 

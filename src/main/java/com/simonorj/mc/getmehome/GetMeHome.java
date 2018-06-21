@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.TranslatableComponent;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -117,16 +116,17 @@ public final class GetMeHome extends JavaPlugin {
             // Temporary measures
             getLogger().warning("Plugin in beta: MySQL storage method is not implemented yet! Using YAML storage method.");
             getLogger().warning("Once MySQL is implemented, you can use '/getmehome migrate' to migrate from YAML to MySQL.");
-/*      MySQL storage method is not implemented yet.  Will be uncommented when enabled.
-            if (cs.contains("database")) {
-                getLogger().warning("storage.database is empty. Using YAML storage method.");
+/*          MySQL storage method is not implemented yet.  Will be uncommented when enabled.
+            if (!cs.contains("hostname")) {
+                getLogger().warning("storage.hostname is empty. Using YAML storage method.");
             } else {
-                storage = new StorageSQL(this);
-                if ((StorageSQL)storage).getError() == null)
+                try {
+                    storage = new StorageSQL(this);
                     return;
-
-                getLogger().warning("Cannot connect to MySQL database. Using YAML storage method.");
-                // Print MySQL failure reason
+                } catch (SQLException e) {
+                    getLogger().warning("Cannot connect to MySQL database. Using YAML storage method.");
+                    // Print stacktrace
+                }
             }
 */
         } else if (!type.equalsIgnoreCase("yaml")) {

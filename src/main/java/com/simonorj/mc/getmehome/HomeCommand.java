@@ -94,7 +94,7 @@ public class HomeCommand implements TabExecutor {
                         plugin.messageTo(p, String.format(localize.getString("commands.delhome"), home));
                     else
                         plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
-                    return;
+                    //return; (implied)
                 }
             }
         });
