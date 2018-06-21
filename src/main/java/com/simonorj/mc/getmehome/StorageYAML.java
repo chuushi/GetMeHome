@@ -16,6 +16,7 @@ final class StorageYAML extends HomeStorage {
     private final FileConfiguration hc;
     private final GetMeHome plugin;
     private final boolean saveName;
+    private boolean changed = false;
 
     /*
      * Home structure:
@@ -60,11 +61,14 @@ final class StorageYAML extends HomeStorage {
 
     @Override
     void save() {
-        try {
-            hc.save(homeFile);
-        } catch (IOException e) {
-            plugin.getLogger().warning("GetMeHome: Homes failed to save!");
-            e.printStackTrace();
+        if (changed) {
+            try {
+                hc.save(homeFile);
+                changed = false;
+            } catch (IOException e) {
+                plugin.getLogger().warning("Homes failed to save!");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -105,6 +109,8 @@ final class StorageYAML extends HomeStorage {
 
     @Override
     boolean setDefaultHome(OfflinePlayer player, String name) {
+        changed = true;
+
         if (hc.getConfigurationSection(player.getUniqueId().toString() + ".h." + name) == null)
             return false;
         hc.set(player.getUniqueId().toString() + ".d", name);
@@ -113,6 +119,8 @@ final class StorageYAML extends HomeStorage {
 
     @Override
     boolean setHome(OfflinePlayer player, String name, Location loc) {
+        changed = true;
+
         String uid = player.getUniqueId().toString();
         // Increment when adding another home
         ConfigurationSection cs = hc.getConfigurationSection(uid);

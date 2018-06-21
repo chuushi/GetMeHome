@@ -15,6 +15,7 @@ storage:
   
   # For MySQL.
   # Also, if planning on migrating to MySQL, fill this in.
+  hostname: localhost:3306
   database: minecraft
   username: username
   password: password

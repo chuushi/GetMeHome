@@ -104,25 +104,36 @@ public final class GetMeHome extends JavaPlugin {
     }
 
     private void loadStorage() {
-        if (!getConfig().contains("storage.type"))
-            getLogger().warning(getConfig().contains("storage") ? "storage is empty" : "storage.type is not set");
-        else {
-            ConfigurationSection cs = getConfig().getConfigurationSection("storage");
-            String type = cs.getString("type");
-
-            if (type.equalsIgnoreCase("mysql")) {
-                if (cs.contains("database")) {
-                    getLogger().warning("storage.database is empty. Using YAML storage method.");
-                } else {
-                    storage = new StorageSQL(this);
-                    return;
-                }
-            } else if (!type.equalsIgnoreCase("yaml")) {
-                    getLogger().warning("storage.type contains illegal type. Using YAML storage method.");
-            }
-
+        if (!getConfig().contains("storage.type")) {
+            getLogger().warning("storage.type is missing. Using YAML storage method.");
             storage = new StorageYAML(this);
+            return;
         }
+
+        ConfigurationSection cs = getConfig().getConfigurationSection("storage");
+        String type = cs.getString("type");
+
+        if (type.equalsIgnoreCase("mysql")) {
+            // Temporary measures
+            getLogger().warning("Plugin in beta: MySQL storage method is not implemented yet! Using YAML storage method.");
+            getLogger().warning("Once MySQL is implemented, you can use '/getmehome migrate' to migrate from YAML to MySQL.");
+/*      MySQL storage method is not implemented yet.  Will be uncommented when enabled.
+            if (cs.contains("database")) {
+                getLogger().warning("storage.database is empty. Using YAML storage method.");
+            } else {
+                storage = new StorageSQL(this);
+                if ((StorageSQL)storage).getError() == null)
+                    return;
+
+                getLogger().warning("Cannot connect to MySQL database. Using YAML storage method.");
+                // Print MySQL failure reason
+            }
+*/
+        } else if (!type.equalsIgnoreCase("yaml")) {
+                getLogger().warning("storage.type contains illegal type. Using YAML storage method.");
+        }
+
+        storage = new StorageYAML(this);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class ListHomesCommand implements TabExecutor {
             public void run() {
                 // Get player in question
                 OfflinePlayer get;
-                if (sender.hasPermission("getmehome.otherhome") && args.length != 0) {
+                if (sender.hasPermission("getmehome.listother") && args.length != 0) {
                     UUID uuid = getStorage().getUniqueID(args[0]);
                     if (uuid == null)
                         get = null;
@@ -92,7 +92,7 @@ public class ListHomesCommand implements TabExecutor {
                     else
                         t.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
                                 "/tp " + home.getX() + " " + home.getY() + " " + home.getZ()));
-                    if (sender.hasPermission("getmehome.otherhome"))
+                    if (sender.hasPermission("getmehome.listother"))
                         t.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                                 new ComponentBuilder("Coordinates: " + home.getBlockX() + " " + home.getBlockY() + " " + home.getBlockZ())
                                         .create()));
@@ -109,7 +109,7 @@ public class ListHomesCommand implements TabExecutor {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (sender.hasPermission("getmehome.otherhome"))
+        if (sender.hasPermission("getmehome.listother"))
             return null;
         else
             return Collections.emptyList();

@@ -1,13 +1,14 @@
 name: GetMeHome
 version: ${project.version}
 author: SimonOrJ
-description: Simple home plugin that just gets you home. Nothing more.
+description: Simple home plugin that just gets you home
 main: com.simonorj.mc.getmehome.GetMeHome
 website: http://github.com/SimonOrJ/GetMeHome
 
 commands:
   getmehome:
     description: GetMeHome's main (help) command
+    usage: /getmehome [reload|migrate]
   home:
     aliases: [h]
     description: Sends you home
@@ -24,12 +25,21 @@ commands:
     usage: /delhome [home name]
   listhomes:
     description: Lists all the homes
-    usage: /listhomes [player]
+    usage: /listhomes
 
 permissions:
   getmehome.reload:
-    description: Configuraiton reload
+    description: Allows /getmehome reload
     default: op
-  getmehome.otherhome:
-    description: power to list and get coordinates of other's homes
+  getmehome.migrate:
+    description: Allows /getmehome migrate
     default: op
+  getmehome.listother:
+    description: Allows /listhomes <player> (as opposed to just /listhomes)
+    default: op
+  getmehome.*:
+    description: Allows all admin commands
+    children:
+      getmehome.reload: true
+      getmehome.migrate: true
+      getmehome.otherhome: true
