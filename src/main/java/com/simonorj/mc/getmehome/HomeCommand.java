@@ -51,7 +51,7 @@ public class HomeCommand implements TabExecutor {
                     int dist = new Double(loc.distanceSquared(p.getLocation())).intValue();
                     p.teleport(loc);
                     boolean farAway = true;
-                    if (p.getWorld().equals(loc.getWorld()))
+                    if (p.getWorld() == loc.getWorld() && p.getWorld().equals(loc.getWorld()))
                         farAway = dist > 25;
 
                     if (farAway)
