@@ -48,12 +48,11 @@ public class HomeCommand implements TabExecutor {
                     }
 
                     // Welcome home!
-                    int dist = new Double(loc.distanceSquared(p.getLocation())).intValue();
                     p.teleport(loc);
                     boolean farAway = true;
-                    if (p.getWorld() == loc.getWorld() && p.getWorld().equals(loc.getWorld()))
-                        farAway = dist > 25;
-
+                    if (p.getWorld() == loc.getWorld()) {
+                        farAway = loc.distanceSquared(p.getLocation()) > 25.0;
+                    }
                     if (farAway)
                         plugin.messageTo(p, localize.getString("commands.home.success"));
 
