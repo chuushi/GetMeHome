@@ -1,14 +1,13 @@
 package com.simonorj.mc.getmehome;
 
+import com.simonorj.mc.getmehome.command.HomeCommand;
+import com.simonorj.mc.getmehome.command.ListHomesCommand;
+import com.simonorj.mc.getmehome.command.MetaCommand;
+import com.simonorj.mc.getmehome.storage.HomeStorage;
+import com.simonorj.mc.getmehome.storage.StorageYAML;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.TranslatableComponent;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,15 +18,19 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class GetMeHome extends JavaPlugin {
+    private static GetMeHome instance;
+    private static ChatColor messageColor;
+
     private HomeStorage storage;
     private List<HomePermissionLimit> homePermissionLimit;
     private int defaultLimit;
-    private ChatColor color;
-    private boolean italic, bold, underline;
+
+    public static GetMeHome getInstance() {
+        return instance;
+    }
 
     private final class HomePermissionLimit {
         private final String permission;
@@ -48,22 +51,19 @@ public final class GetMeHome extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        GetMeHome.instance = this;
+
         // Get config
         saveDefaultConfig();
         loadConfiguration();
         loadStorage();
 
+        getCommand("getmehome").setExecutor(new MetaCommand());
         HomeCommand hc = new HomeCommand(this);
         getCommand("home").setExecutor(hc);
         getCommand("sethome").setExecutor(hc);
         getCommand("setdefaulthome").setExecutor(hc);
         getCommand("delhome").setExecutor(hc);
-        getCommand("home").setTabCompleter(hc);
-        getCommand("sethome").setTabCompleter(hc);
-        getCommand("setdefaulthome").setTabCompleter(hc);
-        getCommand("delhome").setTabCompleter(hc);
-
-        getCommand("getmehome").setTabCompleter(new GetMeHomeTab());
         getCommand("listhomes").setExecutor(new ListHomesCommand(this));
 
         getServer().getPluginManager().registerEvents(new SavingDetector(), this);
@@ -96,101 +96,27 @@ public final class GetMeHome extends JavaPlugin {
             homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
         }
 
-        color = ChatColor.getByChar(getConfig().getString("formatting.color", "e").charAt(0));
-        italic =    getConfig().getBoolean("formatting.italic");
-        bold =      getConfig().getBoolean("formatting.bold");
-        underline = getConfig().getBoolean("formatting.underline");
+        GetMeHome.messageColor = ChatColor.getByChar(getConfig().getString("formatting.color", "e").charAt(0));
     }
 
     private void loadStorage() {
-        if (!getConfig().contains("storage.type")) {
-            getLogger().warning("storage.type is missing. Using YAML storage method.");
-            storage = new StorageYAML(this);
-            return;
-        }
-
-        ConfigurationSection cs = getConfig().getConfigurationSection("storage");
-        String type = cs.getString("type");
-
-        if (type.equalsIgnoreCase("mysql")) {
-            // Temporary measures
-            getLogger().warning("Plugin in beta: MySQL storage method is not implemented yet! Using YAML storage method.");
-            getLogger().warning("Once MySQL is implemented, you can use '/getmehome migrate' to migrate from YAML to MySQL.");
-/*          MySQL storage method is not implemented yet.  Will be uncommented when enabled.
-            if (!cs.contains("hostname")) {
-                getLogger().warning("storage.hostname is empty. Using YAML storage method.");
-            } else {
-                try {
-                    storage = new StorageSQL(this);
-                    return;
-                } catch (SQLException e) {
-                    getLogger().warning("Cannot connect to MySQL database. Using YAML storage method.");
-                    // Print stacktrace
-                }
-            }
-*/
-        } else if (!type.equalsIgnoreCase("yaml")) {
-                getLogger().warning("storage.type contains illegal type. Using YAML storage method.");
-        }
-
-        storage = new StorageYAML(this);
+        storage = new StorageYAML();
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("getmehome")) {
-            if (args.length == 0) {
-                messageTo(sender, "GetMeHome Version: " + getDescription().getVersion());
-                messageTo(sender, "by " + getDescription().getAuthors().get(0));
-                // Display list of commands
-                return true;
-            }
-
-            if (args[0].equalsIgnoreCase("reload")) {
-                if (storage instanceof StorageYAML) {
-                    if (args.length != 2 || !(args[1].equalsIgnoreCase("yes") || args[1].equalsIgnoreCase("no"))) {
-                        BaseComponent prompt = new TextComponent("GetMeHome: Overwrite homes.yml? ");
-
-                        BaseComponent yes = new TranslatableComponent("gui.yes");
-                        yes.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + label + " " + args[0] +" yes"));
-                        yes.setColor(ChatColor.AQUA);
-
-                        BaseComponent no = new TranslatableComponent("gui.no");
-                        no.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + label + " " + args[0] +" no"));
-                        no.setColor(ChatColor.AQUA);
-
-                        prompt.addExtra(yes);
-                        prompt.addExtra(" ");
-                        prompt.addExtra(no);
-
-                        messageTo(sender, prompt);
-                        return true;
-                    }
-                }
-                reloadConfig();
-                loadConfiguration();
-                if (!(storage instanceof StorageYAML && args.length == 2 && args[1].equalsIgnoreCase("no")))
-                    storage.save();
-                loadStorage();
-
-                messageTo(sender, "GetMeHome: " + ChatColor.GREEN + "Configuration reloaded successfully.");
-
-                return true;
-            }
-
-            if (args[0].equalsIgnoreCase("clearcache")) {
-                storage.clearCache();
-                messageTo(sender, "GetMeHome: Cache cleared.");
-            }
-        }
         return false;
     }
 
-    HomeStorage getStorage() {
+    public HomeStorage getStorage() {
         return storage;
     }
 
-    int getSetLimit(Player p) {
+    public static ChatColor getMessageColor() {
+        return messageColor;
+    }
+
+    public int getSetLimit(Player p) {
         // Override if has permission node
         for (HomePermissionLimit l : homePermissionLimit) {
             if (p.hasPermission(l.getPermission())) {
@@ -200,47 +126,9 @@ public final class GetMeHome extends JavaPlugin {
         return defaultLimit;
     }
 
-    void messageTo(CommandSender sender, BaseComponent msg) {
-        msg.setColor(color);
-        msg.setItalic(italic);
-        msg.setBold(bold);
-        msg.setUnderlined(underline);
-
-        if (sender instanceof Player) ((Player)sender).spigot().sendMessage(ChatMessageType.SYSTEM, msg);
-        else sender.sendMessage(msg.toLegacyText());
-    }
-
-    void messageTo(CommandSender sender, String msg) {
-        String send = color.toString();
-        if (italic) send += ChatColor.ITALIC;
-        if (bold) send += ChatColor.BOLD;
-        if (underline) send += ChatColor.UNDERLINE;
-
-        send += msg;
-
-        sender.sendMessage(send);
-    }
-
-    public class GetMeHomeTab implements TabCompleter {
-        private final List<String> list;
-
-        private GetMeHomeTab() {
-             list = new ArrayList<>();
-             list.add("reload");
-        }
-
-        @Override
-        public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-            if (sender.hasPermission("getmehome.reload"))
-                return list;
-            else
-                return Collections.emptyList();
-        }
-    }
-
     public final class SavingDetector implements Listener {
         @EventHandler(priority = EventPriority.MONITOR)
-        public void allOut(PlayerQuitEvent e) {
+        public void onAllQuit(PlayerQuitEvent e) {
             if (getServer().getOnlinePlayers().size() <= 1) {
                 storage.save();
                 storage.clearCache();

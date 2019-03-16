@@ -1,5 +1,7 @@
-package com.simonorj.mc.getmehome;
+package com.simonorj.mc.getmehome.command;
 
+import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.storage.HomeStorage;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -8,11 +10,10 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-// sethome, delhome, home
 public class HomeCommand implements TabExecutor {
     private final GetMeHome plugin;
 
-    HomeCommand(GetMeHome plugin) {
+    public HomeCommand(GetMeHome plugin) {
         this.plugin = plugin;
     }
 

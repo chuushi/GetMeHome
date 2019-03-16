@@ -1,5 +1,7 @@
-package com.simonorj.mc.getmehome;
+package com.simonorj.mc.getmehome.command;
 
+import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.storage.HomeStorage;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.*;
@@ -15,7 +17,7 @@ import java.util.*;
 public class ListHomesCommand implements TabExecutor {
     private GetMeHome plugin;
 
-    ListHomesCommand(GetMeHome plugin) {
+    public ListHomesCommand(GetMeHome plugin) {
         this.plugin = plugin;
     }
 
