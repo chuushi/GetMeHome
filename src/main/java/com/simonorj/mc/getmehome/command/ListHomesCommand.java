@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.SpigotLocaleTool;
 import com.simonorj.mc.getmehome.storage.HomeStorage;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
@@ -60,10 +61,11 @@ public class ListHomesCommand implements TabExecutor {
                 String defaultHome = getStorage().getDefaultHomeName(get);
 
                 // Localization
-                String[] temp = {"en", "US"};
-                if (sender instanceof Player)
-                    temp = ((Player) sender).spigot().getLocale().split("_");
-                ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", new Locale(temp[0], temp[1]));
+                Locale locale = sender instanceof Player
+                        ? SpigotLocaleTool.parse(((Player) sender).spigot().getLocale())
+                        : Locale.getDefault();
+
+                ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", locale);
 
                 BaseComponent ret;
                 if (get == sender)

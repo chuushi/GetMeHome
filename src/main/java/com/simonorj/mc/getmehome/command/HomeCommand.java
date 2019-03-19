@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.SpigotLocaleTool;
 import com.simonorj.mc.getmehome.storage.HomeStorage;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -29,8 +30,7 @@ public class HomeCommand implements TabExecutor {
         }
 
         final Player p = (Player) sender;
-        String[] temp = p.spigot().getLocale().split("_");
-        final ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", new Locale(temp[0], temp[1]));
+        final ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", SpigotLocaleTool.parse(p.spigot().getLocale()));
 
         String home;
 
