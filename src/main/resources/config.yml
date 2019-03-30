@@ -1,7 +1,9 @@
-# # # # # # # # # # # # # # # # # # # # #
-#        GetMeHome Configuration        #
-# https://github.com/SimonOrJ/GetMeHome #
+# GetMeHome by Simon Chuu
 
+# For help, follow the plugin project link below:
+# https://github.com/SimonOrJ/GetMeHome/
+
+# TODO: Rewrite the configuration
 storage:
   # type - Format to save homes as. Possible values:
   # YAML    Good enough for small servers.
@@ -39,3 +41,7 @@ limit:
   #   permission.node: maximum number of homes
   ### Permission on top of this list will be checked first! ###
   gmh.twohomes: 2
+
+# Enable metrics for this plugin? (If unsure, leave it as true)
+#   Link to metrics: https://bstats.org/plugin/bukkit/GetMeHome/
+enable-metrics: true
