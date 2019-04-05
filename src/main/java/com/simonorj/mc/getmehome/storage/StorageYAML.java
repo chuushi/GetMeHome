@@ -187,9 +187,12 @@ public class StorageYAML implements HomeStorage {
     }
 
     @Override
-    public Map<UUID, Map<String, Location>> getEntireList() {
-        // TODO - Not implemented yet
-        return null;
+    public int totalHomes() {
+        int ret = 0;
+        for (String k : storage.getKeys(false)) {
+            ret += storage.getConfigurationSection(k + ".h").getKeys(false).size();
+        }
+        return ret;
     }
 
     @Override

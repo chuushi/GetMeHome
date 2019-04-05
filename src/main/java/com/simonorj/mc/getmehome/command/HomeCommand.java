@@ -1,7 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
-import com.simonorj.mc.getmehome.SpigotLocaleTool;
+import com.simonorj.mc.getmehome.MessageTool;
 import com.simonorj.mc.getmehome.storage.HomeStorage;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -11,7 +11,8 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class HomeCommand implements TabExecutor {
+public class HomeCommand implements TabExecutor, MessageTool {
+    private static final String OTHER_PERM = "getmehome.command.home.other";
     private final GetMeHome plugin;
 
     public HomeCommand(GetMeHome plugin) {
@@ -30,7 +31,6 @@ public class HomeCommand implements TabExecutor {
         }
 
         final Player p = (Player) sender;
-        final ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", SpigotLocaleTool.parse(p.spigot().getLocale()));
 
         String home;
 
@@ -41,7 +41,7 @@ public class HomeCommand implements TabExecutor {
             Location loc = getStorage().getHome(p, home);
             // No home
             if (loc == null) {
-                plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
+                p.sendMessage(base("commands.generic.homeDoesNotExist", getLocale(p), home));
                 return true;
             }
 

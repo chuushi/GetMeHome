@@ -100,13 +100,11 @@ public interface HomeStorage {
     Map<String, Location> getAllHomes(OfflinePlayer player);
 
     /**
-     * Gets the entire list of homes.  This should be used only for moving the storage method/type.
+     * Gets the total number of homes set in the plugin
      *
-     * @return an entire map of player homes.
-     * @deprecated Better off using "import" instead.
+     * @return total number of homes stored on the storage
      */
-    @Deprecated
-    Map<UUID, Map<String, Location>> getEntireList();
+    int totalHomes();
 
     /**
      * Clear cache in case database changed. To be used by

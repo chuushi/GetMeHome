@@ -1,7 +1,6 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
-import com.simonorj.mc.getmehome.SpigotLocaleTool;
 import com.simonorj.mc.getmehome.storage.HomeStorage;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
@@ -16,6 +15,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public class ListHomesCommand implements TabExecutor {
+    private static final String OTHER_PERM = "getmehome.command.listhomes.other";
     private GetMeHome plugin;
 
     public ListHomesCommand(GetMeHome plugin) {

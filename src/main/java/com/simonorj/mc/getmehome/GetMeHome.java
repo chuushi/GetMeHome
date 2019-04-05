@@ -1,32 +1,28 @@
 package com.simonorj.mc.getmehome;
 
+import com.google.common.base.Charsets;
 import com.simonorj.mc.getmehome.command.HomeCommand;
 import com.simonorj.mc.getmehome.command.ListHomesCommand;
 import com.simonorj.mc.getmehome.command.MetaCommand;
 import com.simonorj.mc.getmehome.storage.HomeStorage;
 import com.simonorj.mc.getmehome.storage.StorageYAML;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public final class GetMeHome extends JavaPlugin {
     private static GetMeHome instance;
-    private static ChatColor messageColor;
-
     private HomeStorage storage;
     private List<HomePermissionLimit> homePermissionLimit;
     private int defaultLimit;
+
+    String prefix;
 
     public static GetMeHome getInstance() {
         return instance;
@@ -53,11 +49,6 @@ public final class GetMeHome extends JavaPlugin {
     public void onEnable() {
         GetMeHome.instance = this;
 
-        // Get config
-        saveDefaultConfig();
-        loadConfiguration();
-        loadStorage();
-
         getCommand("getmehome").setExecutor(new MetaCommand());
         HomeCommand hc = new HomeCommand(this);
         getCommand("home").setExecutor(hc);
@@ -66,54 +57,82 @@ public final class GetMeHome extends JavaPlugin {
         getCommand("delhome").setExecutor(hc);
         getCommand("listhomes").setExecutor(new ListHomesCommand(this));
 
-        getServer().getPluginManager().registerEvents(new SavingDetector(), this);
+        // Get config
+        saveDefaultConfig();
+
+        if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) != ConfigTool.version)
+            saveConfig();
+
+        loadConfig();
+        loadStorage();
+
+        getServer().getPluginManager().registerEvents(new SaveListener(), this);
+
+        if (getConfig().getBoolean(ConfigTool.ENABLE_METRICS_NODE, true))
+            setupMetrics();
+    }
+
+    private void setupMetrics() {
+        Metrics metrics = new Metrics(this);
+        metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", () -> storage.totalHomes()));
+    }
+
+    public void loadStorage() {
+        storage = new StorageYAML();
     }
 
     @Override
     public void onDisable() {
         if (storage != null)
             storage.save();
+
+        this.prefix = null;
+        this.homePermissionLimit = null;
+        this.storage = null;
+        GetMeHome.instance = null;
     }
 
-    private void loadConfiguration() {
+    @Override
+    public void saveConfig() {
+        File configFile = new File(getDataFolder(), "config.yml");
+
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            configFile.mkdirs();
+            String data = ConfigTool.saveToString(getConfig());
+
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(configFile), Charsets.UTF_8)) {
+                writer.write(data);
+            }
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Could not save config to " + configFile, e);
+        }
+    }
+
+    public void loadConfig() {
         homePermissionLimit = new ArrayList<>();
 
-        defaultLimit = getConfig().getInt("limit.default", 1);
-        ConfigurationSection csl = getConfig().getConfigurationSection("limit");
+        defaultLimit = getConfig().getInt(ConfigTool.LIMIT_DEFAULT_NODE, 1);
+        ConfigurationSection csl = getConfig().getConfigurationSection(ConfigTool.LIMIT_ROOT);
 
         if (csl == null) {
-            getLogger().warning("Configuration invalid or missing: limit");
+            getLogger().warning("Configuration invalid or missing: " + ConfigTool.LIMIT_ROOT);
             return;
         }
 
 
         for (String s : csl.getKeys(true)) {
             // Skip default and non-number node
-            if (s.equals("default") || !csl.isInt(s))
+            if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isInt(s))
                 continue;
 
             // put it in
             homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
         }
-
-        GetMeHome.messageColor = ChatColor.getByChar(getConfig().getString("formatting.color", "e").charAt(0));
-    }
-
-    private void loadStorage() {
-        storage = new StorageYAML();
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        return false;
     }
 
     public HomeStorage getStorage() {
         return storage;
-    }
-
-    public static ChatColor getMessageColor() {
-        return messageColor;
     }
 
     public int getSetLimit(Player p) {
@@ -126,19 +145,4 @@ public final class GetMeHome extends JavaPlugin {
         return defaultLimit;
     }
 
-    public final class SavingDetector implements Listener {
-        @EventHandler(priority = EventPriority.MONITOR)
-        public void onAllQuit(PlayerQuitEvent e) {
-            if (getServer().getOnlinePlayers().size() <= 1) {
-                storage.save();
-                storage.clearCache();
-            }
-        }
-
-        @EventHandler(priority = EventPriority.MONITOR)
-        public void worldSave(WorldSaveEvent e) {
-            // Save home data
-            storage.save();
-        }
-    }
 }

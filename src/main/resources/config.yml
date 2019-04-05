@@ -3,36 +3,27 @@
 # For help, follow the plugin project link below:
 # https://github.com/SimonOrJ/GetMeHome/
 
-# TODO: Rewrite the configuration
+# Storage settings
 storage:
-  # type - Format to save homes as. Possible values:
-  # YAML    Good enough for small servers.
-  # MySQL   Ideal for huge player base.
-  type: YAML
-  
-  # YAML:
   # should the plugin save player names with their UUID?
   # This is only for your reference when looking through the file.
   savename: true
-  
-  # For MySQL.
-  # Also, if planning on migrating to MySQL, fill this in.
-  hostname: localhost:3306
-  database: minecraft
-  username: username
-  password: password
-  prefix: gmh_
 
-formatting:
-  # Accepts only color (0-9,a-f)
-  color: e
-  italic: false
-  bold: false
-  underline: false
+message:
+  # Prefix for beginning of message. Use &[0-9a-f] to set colors.
+  prefix: "&6[GetMeHome]"
+  # Colors: Accepted values are 0~9 or a~f.
+  # https://minecraft.gamepedia.com/Formatting_codes
+  content-color: e
+  # Color for the focus points. e.g. home names or player names
+  focus-color: f
 
-# Maximum distance away from home point for "Welcome home" message to not show on /home
-welcomeHomeRadius: 4;
+# Maximum distance away from home point for "Welcome home" message to not show
+# on /home
+#   Set to -1 to disable "Welcome home" message
+welcome-home-radius: 4
 
+# Home limits (based on custom permission nodes)
 limit:
   # default - default home limit. If removed, defaults to 1.
   default: 1
@@ -40,7 +31,7 @@ limit:
   # The rest of the home limit can be listed in this format:
   #   permission.node: maximum number of homes
   ### Permission on top of this list will be checked first! ###
-  gmh.twohomes: 2
+  getmehome.twohomes: 2
 
 # Enable metrics for this plugin? (If unsure, leave it as true)
 #   Link to metrics: https://bstats.org/plugin/bukkit/GetMeHome/
