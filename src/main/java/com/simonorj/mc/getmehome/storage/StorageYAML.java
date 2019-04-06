@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class StorageYAML implements HomeStorage {
+public class StorageYAML implements HomeStorageAPI {
     private final GetMeHome plugin = GetMeHome.getInstance();
     private final boolean saveName = plugin.getConfig().getBoolean("storage.savename");
     private final File homeFile = new File(plugin.getDataFolder(), "homes.yml");
@@ -25,7 +25,7 @@ public class StorageYAML implements HomeStorage {
      *   NAME: UUID
      *
      * UUID:
-     *   n: PLAYER NAME
+     *   n: PLAYER NAME (if enabled)
      *   d: DEFAULT HOME NAME
      *   h:
      *     HOMENAME:

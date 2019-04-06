@@ -1,10 +1,8 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
-import com.simonorj.mc.getmehome.storage.HomeStorage;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.*;
+import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -14,6 +12,8 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
+import static com.simonorj.mc.getmehome.MessageTool.*;
+
 public class ListHomesCommand implements TabExecutor {
     private static final String OTHER_PERM = "getmehome.command.listhomes.other";
     private GetMeHome plugin;
@@ -22,95 +22,60 @@ public class ListHomesCommand implements TabExecutor {
         this.plugin = plugin;
     }
 
-    private HomeStorage getStorage() {
+    private HomeStorageAPI getStorage() {
         return plugin.getStorage();
     }
 
     @Override
     public boolean onCommand(final CommandSender sender, Command cmd, String label, final String[] args) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-            @Override
-            public void run() {
-                // Get player in question
-                OfflinePlayer get;
-                if (sender.hasPermission("getmehome.listother") && args.length != 0) {
-                    UUID uuid = getStorage().getUniqueID(args[0]);
-                    if (uuid == null)
-                        get = null;
-                    else
-                        get = plugin.getServer().getOfflinePlayer(uuid);
-                } else if (sender instanceof Player) {
-                    get = (Player) sender;
-                } else {
-                    get = null;
-                }
-
-                if (get == null) {
-                    // When player is not found
-                    BaseComponent ret = new TranslatableComponent("commands.generic.player.notFound");
-                    ret.setColor(ChatColor.RED);
-                    if (sender instanceof Player)
-                        ((Player) sender).spigot().sendMessage(ChatMessageType.SYSTEM, ret);
-                    else
-                        sender.sendMessage("That player cannot be found");
-                    return;
-                }
-
-                // Get home names owned by player
-                Map<String, Location> homes = getStorage().getAllHomes(get);
-                String defaultHome = getStorage().getDefaultHomeName(get);
-
-                // Localization
-                Locale locale = sender instanceof Player
-                        ? SpigotLocaleTool.parse(((Player) sender).spigot().getLocale())
-                        : Locale.getDefault();
-
-                ResourceBundle localize = ResourceBundle.getBundle("GetMeHome", locale);
-
-                BaseComponent ret;
-                if (get == sender)
-                    ret = new TextComponent(String.format(localize.getString("commands.listhomes.self"),
-                            homes.size(), plugin.getSetLimit((Player) get)));
-                else if (get instanceof Player)
-                    ret = new TextComponent(String.format(localize.getString("commands.listhomes.other"),
-                            get.getName(), homes.size(), plugin.getSetLimit((Player) get)));
-                else
-                    ret = new TextComponent(String.format(localize.getString("commands.listhomes.other.offline"),
-                            get.getName(), homes.size()));
-
-
-                // List homes
-                for (String name : homes.keySet()) {
-                    Location home = homes.get(name);
-                    BaseComponent t = new TextComponent("[" + name + "]");
-                    t.setColor(ChatColor.AQUA);
-                    if (name.equals(defaultHome))
-                        t.setBold(true);
-
-                    if (get == sender)
-                        t.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
-                                "/home " + name));
-                    else
-                        t.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
-                                "/tp " + home.getX() + " " + home.getY() + " " + home.getZ()));
-                    if (sender.hasPermission("getmehome.listother"))
-                        t.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                new ComponentBuilder("Coordinates: " + home.getBlockX() + " " + home.getBlockY() + " " + home.getBlockZ())
-                                        .create()));
-
-                    ret.addExtra(" ");
-                    ret.addExtra(t);
-                }
-
-                plugin.messageTo(sender, ret);
+        // Get player in question
+        OfflinePlayer get;
+        if (sender.hasPermission(OTHER_PERM) && args.length != 0) {
+            UUID uuid = getStorage().getUniqueID(args[0]);
+            if (uuid == null) {
+                sender.sendMessage(error("commands.generic.player.notFound", sender));
+                return true;
+            } else {
+                get = plugin.getServer().getOfflinePlayer(uuid);
             }
-        });
+        } else if (sender instanceof Player) {
+            get = (Player) sender;
+        } else {
+            // When player is not found
+            sender.sendMessage("You must be a player");
+            return true;
+        }
+
+        // Get home names owned by player
+        Map<String, Location> homes = getStorage().getAllHomes(get);
+        String defaultHome = getStorage().getDefaultHomeName(get);
+
+        StringBuilder ret = new StringBuilder();
+
+        if (get == sender)
+            ret.append(regular("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get)));
+        else if (get instanceof Player)
+            ret.append(regular("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get)));
+        else
+            ret.append(regular("commands.listhomes.other.offline", sender, get.getName(), homes.size()));
+
+        ret.append(plugin.getFocusColor());
+
+        // List homes
+        for (String name : homes.keySet()) {
+            if (name.equals(defaultHome))
+                ret.append(' ').append(ChatColor.BOLD).append(name).append(ChatColor.RESET).append(plugin.getFocusColor());
+            else
+                ret.append(' ').append(name);
+        }
+
+        sender.sendMessage(ret.toString());
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (sender.hasPermission("getmehome.listother"))
+        if (sender.hasPermission(OTHER_PERM))
             return null;
         else
             return Collections.emptyList();

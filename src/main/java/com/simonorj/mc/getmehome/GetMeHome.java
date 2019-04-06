@@ -1,12 +1,13 @@
 package com.simonorj.mc.getmehome;
 
 import com.google.common.base.Charsets;
-import com.simonorj.mc.getmehome.command.HomeCommand;
+import com.simonorj.mc.getmehome.command.HomeCommands;
 import com.simonorj.mc.getmehome.command.ListHomesCommand;
 import com.simonorj.mc.getmehome.command.MetaCommand;
-import com.simonorj.mc.getmehome.storage.HomeStorage;
+import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import com.simonorj.mc.getmehome.storage.StorageYAML;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,15 +19,41 @@ import java.util.logging.Level;
 
 public final class GetMeHome extends JavaPlugin {
     private static GetMeHome instance;
-    private HomeStorage storage;
+    private HomeStorageAPI storage;
     private List<HomePermissionLimit> homePermissionLimit;
     private int defaultLimit;
 
-    String prefix;
+    private String prefix;
+    private ChatColor focusColor;
+    private ChatColor contentColor;
+    private int welcomeHomeRadiusSquared;
 
     public static GetMeHome getInstance() {
         return instance;
     }
+
+    public int getWelcomeHomeRadiusSquared() {
+        return welcomeHomeRadiusSquared;
+    }
+
+    public String getPrefix() {
+        return getPrefix(false);
+    }
+
+    public String getPrefix(boolean withSpace) {
+        if (prefix.isEmpty())
+            return "";
+        return prefix + " ";
+    }
+
+    public ChatColor getFocusColor() {
+        return focusColor;
+    }
+
+    public ChatColor getContentColor() {
+        return contentColor;
+    }
+
 
     private final class HomePermissionLimit {
         private final String permission;
@@ -50,7 +77,7 @@ public final class GetMeHome extends JavaPlugin {
         GetMeHome.instance = this;
 
         getCommand("getmehome").setExecutor(new MetaCommand());
-        HomeCommand hc = new HomeCommand(this);
+        HomeCommands hc = new HomeCommands(this);
         getCommand("home").setExecutor(hc);
         getCommand("sethome").setExecutor(hc);
         getCommand("setdefaulthome").setExecutor(hc);
@@ -110,9 +137,9 @@ public final class GetMeHome extends JavaPlugin {
     }
 
     public void loadConfig() {
-        homePermissionLimit = new ArrayList<>();
+        this.homePermissionLimit = new ArrayList<>();
 
-        defaultLimit = getConfig().getInt(ConfigTool.LIMIT_DEFAULT_NODE, 1);
+        this.defaultLimit = getConfig().getInt(ConfigTool.LIMIT_DEFAULT_NODE, 1);
         ConfigurationSection csl = getConfig().getConfigurationSection(ConfigTool.LIMIT_ROOT);
 
         if (csl == null) {
@@ -129,9 +156,16 @@ public final class GetMeHome extends JavaPlugin {
             // put it in
             homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
         }
+
+        int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
+
+        this.welcomeHomeRadiusSquared = whr * whr;
+        this.prefix = getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
+        this.contentColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_CONTENT_COLOR_NODE, "e"));
+        this.focusColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_FOCUS_COLOR_NODE, "f"));
     }
 
-    public HomeStorage getStorage() {
+    public HomeStorageAPI getStorage() {
         return storage;
     }
 

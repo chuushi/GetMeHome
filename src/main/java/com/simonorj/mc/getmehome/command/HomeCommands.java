@@ -1,8 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
-import com.simonorj.mc.getmehome.MessageTool;
-import com.simonorj.mc.getmehome.storage.HomeStorage;
+import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -11,15 +10,20 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class HomeCommand implements TabExecutor, MessageTool {
-    private static final String OTHER_PERM = "getmehome.command.home.other";
+import static com.simonorj.mc.getmehome.MessageTool.*;
+
+public class HomeCommands implements TabExecutor {
+    // TODO: Implement a way to go to other player's homes
+    private static final String OTHER_HOME_PERM = "getmehome.command.home.other";
+    private static final String OTHER_SETHOME_PERM = "getmehome.command.sethome.other";
+    private static final String OTHER_DELHOME_PERM = "getmehome.command.delhome.other";
     private final GetMeHome plugin;
 
-    public HomeCommand(GetMeHome plugin) {
+    public HomeCommands(GetMeHome plugin) {
         this.plugin = plugin;
     }
 
-    private HomeStorage getStorage() {
+    private HomeStorageAPI getStorage() {
         return plugin.getStorage();
     }
 
@@ -41,21 +45,23 @@ public class HomeCommand implements TabExecutor, MessageTool {
             Location loc = getStorage().getHome(p, home);
             // No home
             if (loc == null) {
-                p.sendMessage(base("commands.generic.homeDoesNotExist", getLocale(p), home));
+                p.sendMessage(regular("commands.generic.home.failure", p, home));
                 return true;
             }
 
             // Welcome home!
-            boolean farAway = true;
+            boolean farAway;
             if (p.getWorld() == loc.getWorld()) {
                 double dist = loc.distanceSquared(p.getLocation());
-                farAway = dist > 25.0;
+                farAway = dist > plugin.getWelcomeHomeRadiusSquared();
+            } else {
+                farAway = true;
             }
 
             p.teleport(loc);
 
             if (farAway)
-                plugin.messageTo(p, localize.getString("commands.home.success"));
+                p.sendMessage(regular("commands.home.success", p));
 
             return true;
         }
@@ -72,29 +78,31 @@ public class HomeCommand implements TabExecutor, MessageTool {
             if (allow) {
                 if (getStorage().setHome(p, home))
                     if (homeExists)
-                        plugin.messageTo(p, String.format(localize.getString("commands.sethome.relocate"), home));
-                    else plugin.messageTo(p, String.format(localize.getString("commands.sethome.new"), home));
+                        p.sendMessage(regular("commands.sethome.relocate", p, home));
+                    else
+                        p.sendMessage(regular("commands.sethome.new", p, home));
                 else
-                    plugin.messageTo(p, localize.getString("commands.sethome.badLocation"));
+                    p.sendMessage(regular("commands.sethome.badLocation", p));
             } else
-                plugin.messageTo(p, String.format(localize.getString("commands.sethome.reachedLimit"), String.valueOf(limit)));
+                p.sendMessage(regular("commands.sethome.reachedLimit", p, limit));
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
             if (getStorage().setDefaultHome(p, home))
-                plugin.messageTo(p, String.format(localize.getString("commands.setdefaulthome"), home));
+                p.sendMessage(regular("commands.setdefaulthome", p, home));
             else
-                plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
+                p.sendMessage(regular("commands.generic.home.failure", p, home));
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("delhome")) {
             if (getStorage().deleteHome(p, home))
-                plugin.messageTo(p, String.format(localize.getString("commands.delhome"), home));
+                p.sendMessage(regular("commands.delhome", p, home));
             else
-                plugin.messageTo(p, String.format(localize.getString("commands.generic.homeDoesNotExist"), home));
-            //return; (implied)
+                p.sendMessage(regular("commands.generic.home.failure", p, home));
+
+            return true;
         }
         return true;
     }
@@ -114,6 +122,8 @@ public class HomeCommand implements TabExecutor, MessageTool {
                 ret.add(n);
             }
         }
+
+        // TODO: With right permission, show player names as well
 
         return ret;
     }

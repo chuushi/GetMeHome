@@ -1,5 +1,6 @@
 package com.simonorj.mc.getmehome.storage;
 
+import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -14,7 +15,15 @@ import java.util.UUID;
  *
  * @author SimonOrJ
  */
-public interface HomeStorage {
+public interface HomeStorageAPI {
+    default HomeStorageAPI getAPI() {
+        GetMeHome p = GetMeHome.getInstance();
+        if (p == null)
+            return null;
+
+        return p.getStorage();
+    }
+
     /**
      * Save to database
      */

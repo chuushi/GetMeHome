@@ -10,7 +10,9 @@ import org.bukkit.command.TabExecutor;
 
 import java.util.List;
 
-public class MetaCommand implements TabExecutor, MessageTool {
+import static com.simonorj.mc.getmehome.MessageTool.*;
+
+public class MetaCommand implements TabExecutor {
     public static final String RELOAD_PERM = "getmehome.reload";
     private final GetMeHome plugin = GetMeHome.getInstance();
 

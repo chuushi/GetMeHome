@@ -1,7 +1,7 @@
 package com.simonorj.mc.getmehome;
 
-import com.avaje.ebean.text.StringParser;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
@@ -10,22 +10,27 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public interface MessageTool {
-    default String base(String i18n, Locale locale, Object... args) {
+public class MessageTool {
+    private static String base(String i18n, Locale locale, Object... args) {
         String msg = ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n);
 
         return String.format(msg, args);
     }
 
-    default String regular(String i18n, Locale locale, Object... args) {
-        return GetMeHome.getInstance().prefix + base(i18n, locale, args);
+    public static String regular(String i18n, CommandSender p, Object... args) {
+        return GetMeHome.getInstance().getPrefix(true) + base(i18n, getLocale(p), args);
     }
 
-    default String error(String i18n, Locale locale, Object... args) {
-        return ChatColor.RED + base(i18n, locale, args);
+    public static String error(String i18n, CommandSender p, Object... args) {
+        return ChatColor.RED + base(i18n, getLocale(p), args);
     }
 
-    default Locale getLocale(Player p) {
+    private static Locale getLocale(CommandSender sender) {
+        if (sender == null || !(sender instanceof Player))
+            return Locale.getDefault();
+
+        Player p = (Player) sender;
+
         Method method = null;
         for (Method m : p.getClass().getDeclaredMethods()) {
             if (m.getName().equals("getHandle"))
