@@ -1,5 +1,6 @@
 package com.simonorj.mc.getmehome.storage;
 
+import com.simonorj.mc.getmehome.ConfigTool;
 import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -15,7 +16,7 @@ import java.util.*;
 
 public class StorageYAML implements HomeStorageAPI {
     private final GetMeHome plugin = GetMeHome.getInstance();
-    private final boolean saveName = plugin.getConfig().getBoolean("storage.savename");
+    private final boolean saveName = plugin.getConfig().getBoolean(ConfigTool.STORAGE_SAVENAME_NODE);
     private final File homeFile = new File(plugin.getDataFolder(), "homes.yml");
     private final FileConfiguration storage = new YamlConfiguration();
     private boolean updateFlag = false;
