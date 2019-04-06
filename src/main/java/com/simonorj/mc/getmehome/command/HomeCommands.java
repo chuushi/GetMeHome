@@ -97,14 +97,15 @@ public class HomeCommands implements TabExecutor {
 
         if (cmd.getName().equalsIgnoreCase("sethome")) {
             int limit = target instanceof Player ? plugin.getSetLimit((Player) target) : -1;
+            int current = getStorage().getNumberOfHomes(target.getUniqueId());
             boolean allow;
             boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
             if (limit == -1)
                 allow = true;
             else if (homeExists)
-                allow = limit >= getStorage().getNumberOfHomes(target.getUniqueId());
+                allow = limit >= current;
             else
-                allow = limit > getStorage().getNumberOfHomes(target.getUniqueId());
+                allow = limit > current;
 
             if (allow) {
                 if (getStorage().setHome(target.getUniqueId(), home, ((Player) sender).getLocation()))
@@ -122,7 +123,7 @@ public class HomeCommands implements TabExecutor {
                 else
                     sender.sendMessage(error("commands.sethome.badLocation", sender));
             } else {
-                sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit));
+                sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
             }
             return true;
         }
