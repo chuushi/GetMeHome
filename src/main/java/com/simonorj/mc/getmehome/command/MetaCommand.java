@@ -41,9 +41,8 @@ public class MetaCommand implements TabExecutor {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (sender.hasPermission(RELOAD_PERM) || args.length <= 1)
+        if (sender.hasPermission(RELOAD_PERM) && args.length == 1)
             return ImmutableList.of("reload", "clearcache");
-
         return ImmutableList.of();
     }
 }
