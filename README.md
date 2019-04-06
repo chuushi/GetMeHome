@@ -1,39 +1,99 @@
-# GetMeHome
-A straightforward Spigot plugin that gets you home
+# ![Logo](https://www.spigotmc.org/data/resource_icons/66/66257.jpg) GetMeHome
+*A straightforward Spigot plugin that gets you home*
 
-This plugin works on Minecraft 1.9.4 and up!
+There are plenty of home plugins out there, but this plugin was built out of
+necessity for a survival server. I could not find any reliable home plugin to
+rely on for clean database storage that also supports multi-home. Any home
+plugin that I found was either too bloated or too simple. I decided to take it
+on my own, and so, GetMeHome was born.
 
-## [Configuration](src/main/resources/config.yml)
+GetMeHome has all the features you would need for a simple home plugin, and the
+configuration is very simple to understand and set up!  It works on Minecraft
+1.8.8 and up, and it will continue being updated to be future-proof!
 
-By default, everyone is limited to one home.  The plugin stores all the data
-in the `homes.yml` file under plugin directory.  If that's all you need, then
-you are good to go!
+GetMeHome features:
 
-The MySQL functionality hasn't been implemented yet, so you'll have to wait for
-that if you want to store player homes on a database.
+* `/home`, `/sethome`, `/delhome`, and `/listhomes`
+* Support for multi-home by declaring custom permission nodes
+* Ability to change the default home to go to when running `/home` without any
+  arguments 
+* A way to go to or edit other player's homes
 
-You can modify the configuration file `config.yml` to fit your usage case. You
-can configure:
+# Configuration
 
-- Color of the chat
-- Permission group with different home limits
+There are several configuration options that you can set.
 
-Check out [`config.yml`](src/main/resources/config.yml) for more
-configuration information.
+* `message.prefix`: *Default: "&6[GetMeHome]".* The tag used for all messages
+  from GetMeHome.
+* `message.content-color` and `message.focus-color`: Change message colors
+  without any hassle!
+* `welcome-home-radius`: *Default: 4.* Distance away from home point to show
+  the "Welcome home" message. Can be disabled by setting it to -1.
+* `limit.default`: *Default: 1.* Change the default home limit here.
+* `limit.<permission node>`: Add custom permission nodes and the home limits
+  here!
 
-## [Commands and Permissions](src/main/resources/plugin.yml)
+For additional information, check [`config.yml`](src/main/resources/config.yml).
 
-All the available commands and their aliases are listed in the main
-[`plugin.yml`](src/main/resources/config.yml) file. Permission nodes are
-registered in there as well.
+## Commands and Permissions
 
-## [Contributing](CONTRIBUTING.md)
+The default permissions should work well with your needs. All usable permission
+nodes are listed below.
 
-This project uses Maven for all dependencies and packaging process.  If you want
-to use an IDE with this code, clone this project and import it into a
-Maven-compatible IDE or just use Maven. If you're unable to test, feel free to
-make a pull request so I can test your changes.
+For additional information, check [`plugin.yml`](src/main/resources/plugin.yml).
 
-Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information.
+### User commands
 
-## [Spigot plugin page](#) (to be added)
+Everyone is given these permissions by default.
+
+* `getmehome.user`: Allows all commands a user needs to
+  use the plugin features.  This enables the following permission nodes:
+  * `getmehome.command.home`
+  * `getmehome.command.sethome`
+  * `getmehome.command.delhome`
+  * `getmehome.command.listhomes`
+  * `getmehome.command.setdefaulthome`
+* `getmehome.command.home`: Allows going home.
+  * `/home [name]`
+* `getmehome.command.sethome`: Allows setting home.
+  * `/sethome [name]`
+* `getmehome.command.delhome`: Allows deleting own home.
+  * `/delhome [name]`
+* `getmehome.command.listhomes`: Allows listing list of own homes.
+  * `/listhomes`
+* `getmehome.command.setdefaulthome`: Allows changing the default home.
+  * `/setdefaulthome <name>`
+
+### Administration Commands
+
+By default, these permissions are given only to server operators.
+
+* `getmehome.reload`: Allows reloading plugin configuration. This discards
+  homes not yet saved on the file!
+  * `/getmehome reload` to reload.
+  * `/getmehome clearcache` to clear home cache. *This doesn't do anything for
+    now.*
+* `getmehome.command.home.other`: Allows going to other player's home.
+  * `/home <player> <name>`
+* `getmehome.command.sethome.other`: Allows setting other player's home. This
+  ignores the target player's home limits, so be sure to check the number
+  using `/listhomes <player>`!
+  * `/sethome <player> <name>
+* `getmehome.command.delhome`: Allows deletion of other plsyer's home. There is
+  no confirmation prompt, so be careful!
+  * `/delhome <player> <name>`
+* `getmehome.command.listhomes.other`: Allows listing of other plsyers' homes.
+  * `/listhomes <player>`
+
+## Contributing
+
+I can use some help with language translation. Feel free to create a PR with
+new language resource bundles!
+
+Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information!
+
+# External Links
+
+* [Spigot resource link](https://www.spigotmc.org/resources/getmehome.66257/)
+* [BukkitDev resource link](https://dev.bukkit.org/projects/getmehome)
+* [bStats Metrics](https://bstats.org/plugin/bukkit/GetMeHome/)
