@@ -48,7 +48,7 @@ public final class GetMeHome extends JavaPlugin {
         return contentColor;
     }
 
-
+    // TODO: Move all kind of configuration storage logic elsewhere
     private final class HomePermissionLimit {
         private final String permission;
         private final int limit;
@@ -101,10 +101,9 @@ public final class GetMeHome extends JavaPlugin {
                 return "Unchanged";
             if (pre.toLowerCase().contains("getmehome"))
                 return "Modified";
-            else
-                return "Removed";
+            return "Removed";
         }));
-        metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", () -> storage.totalHomes()));
+        metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", getStorage()::totalHomes));
     }
 
     public void loadStorage() {
@@ -147,17 +146,15 @@ public final class GetMeHome extends JavaPlugin {
 
         if (csl == null) {
             getLogger().warning("Configuration invalid or missing: " + ConfigTool.LIMIT_ROOT);
-            return;
-        }
+        } else {
+            for (String s : csl.getKeys(true)) {
+                // Skip default and non-number node
+                if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isInt(s))
+                    continue;
 
-
-        for (String s : csl.getKeys(true)) {
-            // Skip default and non-number node
-            if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isInt(s))
-                continue;
-
-            // put it in
-            homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
+                // put it in
+                homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
+            }
         }
 
         int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);

@@ -3,7 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.simonorj.mc.getmehome</groupId>
     <artifactId>GetMeHome</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <repositories>
         <repository>
             <id>spigot-repo</id>
@@ -18,7 +21,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.8.8-R0.1-SNAPSHOT</version>
+            <version>1.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -63,6 +66,31 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native2ascii-maven-plugin</artifactId>
+                <version>2.0.1</version>
+                <executions>
+                    <execution>
+                        <id>utf8-to-latin1</id>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <srcDir>src/main/resources/i18n</srcDir>
+                            <targetDir>${project.build.outputDirectory}/i18n</targetDir>
+                            <encoding>${project.build.sourceEncoding}</encoding>
+                            <includes>
+                                <include>*.properties</include>
+                            </includes>
+                            <excludes>
+                                <exclude>GetMeHome.properties</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

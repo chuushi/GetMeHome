@@ -193,7 +193,12 @@ public class StorageYAML implements HomeStorageAPI {
     public int totalHomes() {
         int ret = 0;
         for (String k : storage.getKeys(false)) {
-            ret += storage.getConfigurationSection(k + ".h").getKeys(false).size();
+            if (k.length() != 36)
+                continue;
+            ret += storage
+                    .getConfigurationSection(k + ".h")
+                    .getKeys(false)
+                    .size();
         }
         return ret;
     }

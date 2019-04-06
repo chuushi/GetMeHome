@@ -10,7 +10,7 @@ commands:
     description: GetMeHome's main (help) command
     usage: /getmehome
   delhome:
-    description: Delets a set home
+    description: Deletes a set home
     usage: /delhome [home name]
     permission: getmehome.command.delhome
   home:
