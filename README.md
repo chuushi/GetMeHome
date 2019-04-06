@@ -78,7 +78,7 @@ By default, these permissions are given only to server operators.
 * `getmehome.command.sethome.other`: Allows setting other player's home. This
   ignores the target player's home limits, so be sure to check the number
   using `/listhomes <player>`!
-  * `/sethome <player> <name>
+  * `/sethome <player> <name>`
 * `getmehome.command.delhome`: Allows deletion of other plsyer's home. There is
   no confirmation prompt, so be careful!
   * `/delhome <player> <name>`
