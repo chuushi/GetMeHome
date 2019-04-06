@@ -4,10 +4,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
-class ConfigTool {
+public class ConfigTool {
     private static final String STORAGE_ROOT = "storage";
-    private static final String SAVENAME_CHILD = "storage";
-    static final String STORAGE_SAVENAME_NODE = STORAGE_ROOT + "." + SAVENAME_CHILD;
+    private static final String SAVENAME_CHILD = "savename";
+    private static final String STORAGE_SAVENAME_NODE_V1 = "storage.storage";
+    public static final String STORAGE_SAVENAME_NODE = STORAGE_ROOT + "." + SAVENAME_CHILD;
 
     private static final String MESSAGE_ROOT = "message";
     private static final String PREFIX_CHILD = "prefix";
@@ -25,7 +26,7 @@ class ConfigTool {
 
     static final String ENABLE_METRICS_NODE = "enable-metrics";
     static final String CONFIG_VERSION_NODE = "config-version";
-    static final int version = 1;
+    static final int version = 2;
 
     private static final String HEADER =
             "# GetMeHome by Simon Chuu\n" +
@@ -78,7 +79,9 @@ class ConfigTool {
             "# Keeps track of configuration version -- do not change!\n";
 
     static String saveToString(FileConfiguration config) {
-        boolean storageSavename = config.getBoolean(STORAGE_SAVENAME_NODE, true);
+        boolean storageSavename = config.contains(STORAGE_SAVENAME_NODE_V1)
+                ? config.getBoolean(STORAGE_SAVENAME_NODE_V1, true)
+                : config.getBoolean(STORAGE_SAVENAME_NODE, true);
         String messagePrefix = config.getString(MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
         String messageContentColor = config.getString(MESSAGE_CONTENT_COLOR_NODE, "e");
         String messageFocusColor = config.getString(MESSAGE_FOCUS_COLOR_NODE, "f");
