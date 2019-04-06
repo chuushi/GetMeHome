@@ -36,21 +36,15 @@ public final class GetMeHome extends JavaPlugin {
         return welcomeHomeRadiusSquared;
     }
 
-    public String getPrefix() {
-        return getPrefix(false);
-    }
-
-    public String getPrefix(boolean withSpace) {
-        if (prefix.isEmpty())
-            return "";
-        return prefix + " ";
+    String getPrefix() {
+        return prefix;
     }
 
     public ChatColor getFocusColor() {
         return focusColor;
     }
 
-    public ChatColor getContentColor() {
+    ChatColor getContentColor() {
         return contentColor;
     }
 
@@ -101,6 +95,15 @@ public final class GetMeHome extends JavaPlugin {
 
     private void setupMetrics() {
         Metrics metrics = new Metrics(this);
+        metrics.addCustomChart(new Metrics.SimplePie("prefixBranding", () -> {
+            String pre = getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
+            if (pre.equals("&6[GetMeHome]"))
+                return "Unchanged";
+            if (pre.toLowerCase().contains("getmehome"))
+                return "Modified";
+            else
+                return "Removed";
+        }));
         metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", () -> storage.totalHomes()));
     }
 
@@ -160,7 +163,7 @@ public final class GetMeHome extends JavaPlugin {
         int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
 
         this.welcomeHomeRadiusSquared = whr * whr;
-        this.prefix = getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
+        this.prefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]"));
         this.contentColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_CONTENT_COLOR_NODE, "e"));
         this.focusColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_FOCUS_COLOR_NODE, "f"));
     }

@@ -53,7 +53,7 @@
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <shadedPattern>com.simonorj.mc.getmehome.shade</shadedPattern>
+                            <shadedPattern>com.simonorj.mc.getmehome.shade.org.bstats</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

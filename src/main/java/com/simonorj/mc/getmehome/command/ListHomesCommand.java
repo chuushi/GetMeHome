@@ -42,22 +42,22 @@ public class ListHomesCommand implements TabExecutor {
             get = (Player) sender;
         } else {
             // When player is not found
-            sender.sendMessage("You must be a player");
+            sender.sendMessage("Usage: /listhomes <player>");
             return true;
         }
 
         // Get home names owned by player
-        Map<String, Location> homes = getStorage().getAllHomes(get);
-        String defaultHome = getStorage().getDefaultHomeName(get);
+        Map<String, Location> homes = getStorage().getAllHomes(get.getUniqueId());
+        String defaultHome = getStorage().getDefaultHomeName(get.getUniqueId());
 
         StringBuilder ret = new StringBuilder();
 
         if (get == sender)
-            ret.append(regular("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get)));
+            ret.append(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get)));
         else if (get instanceof Player)
-            ret.append(regular("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get)));
+            ret.append(prefixed("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get)));
         else
-            ret.append(regular("commands.listhomes.other.offline", sender, get.getName(), homes.size()));
+            ret.append(prefixed("commands.listhomes.other.offline", sender, get.getName(), homes.size()));
 
         ret.append(plugin.getFocusColor());
 
@@ -75,9 +75,9 @@ public class ListHomesCommand implements TabExecutor {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (sender.hasPermission(OTHER_PERM))
+        if (args.length == 1 && sender.hasPermission(OTHER_PERM))
             return null;
-        else
-            return Collections.emptyList();
+
+        return Collections.emptyList();
     }
 }

@@ -59,7 +59,8 @@ class ConfigTool {
             "#   Set to -1 to disable \"Welcome home\" message\n";
 
     private static final String LIMIT =
-            "# Home limits (based on custom permission nodes)\n";
+            "# Home limits (based on custom permission nodes)\n" +
+            "# Set to -1 for unlimited homes\n";
 
     private static final String LIMIT_DEFAULT =
             "  # default - default home limit. If removed, defaults to 1.\n";

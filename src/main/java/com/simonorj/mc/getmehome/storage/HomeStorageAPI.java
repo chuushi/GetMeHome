@@ -2,7 +2,6 @@ package com.simonorj.mc.getmehome.storage;
 
 import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -15,6 +14,7 @@ import java.util.UUID;
  *
  * @author SimonOrJ
  */
+@SuppressWarnings("unused")
 public interface HomeStorageAPI {
     default HomeStorageAPI getAPI() {
         GetMeHome p = GetMeHome.getInstance();
@@ -43,14 +43,14 @@ public interface HomeStorageAPI {
      * @param name   Name of the home
      * @return Location of the player home. null if no such home.
      */
-    Location getHome(OfflinePlayer player, String name);
+    Location getHome(UUID player, String name);
 
     /**
      * Gets name of the default home.
      * @param player Player to find home of
      * @return home name. null if no (default) home is set.
      */
-    String getDefaultHomeName(OfflinePlayer player);
+    String getDefaultHomeName(UUID player);
 
     /**
      * Sets a different home as a default home
@@ -58,7 +58,7 @@ public interface HomeStorageAPI {
      * @param name Home name
      * @return if name of home exists
      */
-    boolean setDefaultHome(OfflinePlayer player, String name);
+    boolean setDefaultHome(UUID player, String name);
 
     /**
      * Sets home of a player to their Location.
@@ -69,7 +69,7 @@ public interface HomeStorageAPI {
      * @return Success of the saving.
      */
     default boolean setHome(Player player, String name) {
-        return setHome(player, name, player.getLocation());
+        return setHome(player.getUniqueId(), name, player.getLocation());
     }
 
     /**
@@ -80,7 +80,7 @@ public interface HomeStorageAPI {
      * @param loc    Location of the home
      * @return Success of the saving.
      */
-    boolean setHome(OfflinePlayer player, String name, Location loc);
+    boolean setHome(UUID player, String name, Location loc);
 
     /**
      * Gets number of homes set by a player
@@ -88,7 +88,7 @@ public interface HomeStorageAPI {
      * @param player Player for UUID
      * @return number of homes
      */
-    int getNumberOfHomes(OfflinePlayer player);
+    int getNumberOfHomes(UUID player);
 
     /**
      * Deletes the home of a player.
@@ -97,7 +97,7 @@ public interface HomeStorageAPI {
      * @param name   Name of the home to delete
      * @return Success of the deleting.
      */
-    boolean deleteHome(OfflinePlayer player, String name);
+    boolean deleteHome(UUID player, String name);
 
     /**
      * Gets a map of every player's homes.
@@ -106,7 +106,7 @@ public interface HomeStorageAPI {
      * @return HashMap of home names to locations.  Empty set if player has no homes.
      * This assumes the specified Player is a valid player, thus it never returns null.
      */
-    Map<String, Location> getAllHomes(OfflinePlayer player);
+    Map<String, Location> getAllHomes(UUID player);
 
     /**
      * Gets the total number of homes set in the plugin

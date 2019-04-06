@@ -17,16 +17,37 @@ public class MessageTool {
         return String.format(msg, args);
     }
 
-    public static String regular(String i18n, CommandSender p, Object... args) {
-        return GetMeHome.getInstance().getPrefix(true) + base(i18n, getLocale(p), args);
+    public static String raw(String i18n, CommandSender p, Object... args) {
+        return base(i18n, getLocale(p), args);
+    }
+
+    public static String prefixed(String i18n, CommandSender p, Object... args) {
+        String pre = GetMeHome.getInstance().getPrefix();
+        if (!pre.isEmpty()) pre += ' ';
+
+        ChatColor focus = GetMeHome.getInstance().getFocusColor();
+        ChatColor content = GetMeHome.getInstance().getContentColor();
+
+        for (int i = args.length - 1; i >= 0; i--) {
+            args[i] = focus + args[i].toString() + content;
+        }
+
+        return pre + content + base(i18n, getLocale(p), args);
     }
 
     public static String error(String i18n, CommandSender p, Object... args) {
-        return ChatColor.RED + base(i18n, getLocale(p), args);
+        String pre = GetMeHome.getInstance().getPrefix();
+        if (!pre.isEmpty()) pre += ' ';
+
+        for (int i = args.length - 1; i >= 0; i--) {
+            args[i] = args[i].toString();
+        }
+
+        return pre + ChatColor.RED + base(i18n, getLocale(p), args);
     }
 
     private static Locale getLocale(CommandSender sender) {
-        if (sender == null || !(sender instanceof Player))
+        if (!(sender instanceof Player))
             return Locale.getDefault();
 
         Player p = (Player) sender;

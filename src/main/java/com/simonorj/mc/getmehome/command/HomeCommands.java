@@ -2,7 +2,9 @@ package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -13,7 +15,6 @@ import java.util.*;
 import static com.simonorj.mc.getmehome.MessageTool.*;
 
 public class HomeCommands implements TabExecutor {
-    // TODO: Implement a way to go to other player's homes
     private static final String OTHER_HOME_PERM = "getmehome.command.home.other";
     private static final String OTHER_SETHOME_PERM = "getmehome.command.sethome.other";
     private static final String OTHER_DELHOME_PERM = "getmehome.command.delhome.other";
@@ -29,102 +30,173 @@ public class HomeCommands implements TabExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, final Command cmd, String label, final String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("You must be a player.");
+        OfflinePlayer target;
+
+        boolean otherHome;
+
+        if ((args.length >= 2) && hasOtherPermission(cmd, sender)) {
+            UUID uuid = getStorage().getUniqueID(args[0]);
+            if (uuid == null) {
+                sender.sendMessage(error("commands.generic.player.notFound", sender));
+                return true;
+            }
+            target = Bukkit.getOfflinePlayer(uuid);
+            otherHome = true;
+        } else if (sender instanceof Player) {
+            target = (Player) sender;
+            otherHome = false;
+        } else {
+            if (cmd.getName().equalsIgnoreCase("delhome"))
+                sender.sendMessage("Usage: /delhome <player> <home name>");
+            else
+                sender.sendMessage("You must be a player");
             return true;
         }
 
-        final Player p = (Player) sender;
-
         String home;
 
-        if (args.length != 0) home = args[0];
-        else home = getStorage().getDefaultHomeName(p);
+        if (args.length >= 2 && otherHome)
+            home = args[1];
+        else if (args.length != 0)
+            home = args[0];
+        else
+            home = getStorage().getDefaultHomeName(target.getUniqueId());
 
         if (cmd.getName().equalsIgnoreCase("home")) {
-            Location loc = getStorage().getHome(p, home);
+            Location loc = getStorage().getHome(target.getUniqueId(), home);
             // No home
             if (loc == null) {
-                p.sendMessage(regular("commands.generic.home.failure", p, home));
+                if (otherHome)
+                    sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
+                else
+                    sender.sendMessage(error("commands.generic.home.failure", sender, home));
                 return true;
             }
 
             // Welcome home!
             boolean farAway;
-            if (p.getWorld() == loc.getWorld()) {
-                double dist = loc.distanceSquared(p.getLocation());
+            if (((Player) sender).getWorld() == loc.getWorld()) {
+                double dist = loc.distanceSquared(((Player) sender).getLocation());
                 farAway = dist > plugin.getWelcomeHomeRadiusSquared();
             } else {
                 farAway = true;
             }
 
-            p.teleport(loc);
+            ((Player) sender).teleport(loc);
 
-            if (farAway)
-                p.sendMessage(regular("commands.home.success", p));
+            if (farAway) {
+                if (otherHome)
+                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
+                else
+                    sender.sendMessage(prefixed("commands.home.success", sender));
+
+            }
 
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("sethome")) {
-            int limit = plugin.getSetLimit(p);
+            int limit = target instanceof Player ? plugin.getSetLimit((Player) target) : -1;
             boolean allow;
-            boolean homeExists;
-            if (homeExists = getStorage().getHome(p, home) != null)
-                allow = limit >= getStorage().getNumberOfHomes(p);
+            boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
+            if (limit == -1)
+                allow = true;
+            else if (homeExists)
+                allow = limit >= getStorage().getNumberOfHomes(target.getUniqueId());
             else
-                allow = limit > getStorage().getNumberOfHomes(p);
+                allow = limit > getStorage().getNumberOfHomes(target.getUniqueId());
 
             if (allow) {
-                if (getStorage().setHome(p, home))
-                    if (homeExists)
-                        p.sendMessage(regular("commands.sethome.relocate", p, home));
-                    else
-                        p.sendMessage(regular("commands.sethome.new", p, home));
+                if (getStorage().setHome(target.getUniqueId(), home, ((Player) sender).getLocation()))
+                    if (homeExists) {
+                        if (otherHome)
+                            sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
+                        else
+                            sender.sendMessage(prefixed("commands.sethome.relocate", sender, home));
+                    } else {
+                        if (otherHome)
+                            sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
+                        else
+                            sender.sendMessage(prefixed("commands.sethome.new", sender, home));
+                    }
                 else
-                    p.sendMessage(regular("commands.sethome.badLocation", p));
-            } else
-                p.sendMessage(regular("commands.sethome.reachedLimit", p, limit));
+                    sender.sendMessage(error("commands.sethome.badLocation", sender));
+            } else {
+                sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit));
+            }
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
-            if (getStorage().setDefaultHome(p, home))
-                p.sendMessage(regular("commands.setdefaulthome", p, home));
+            if (getStorage().setDefaultHome(((Player) sender).getUniqueId(), home))
+                sender.sendMessage(prefixed("commands.setdefaulthome", sender, home));
             else
-                p.sendMessage(regular("commands.generic.home.failure", p, home));
+                sender.sendMessage(error("commands.generic.home.failure", sender, home));
             return true;
         }
 
         if (cmd.getName().equalsIgnoreCase("delhome")) {
-            if (getStorage().deleteHome(p, home))
-                p.sendMessage(regular("commands.delhome", p, home));
-            else
-                p.sendMessage(regular("commands.generic.home.failure", p, home));
-
+            if (getStorage().deleteHome(target.getUniqueId(), home)) {
+                if (otherHome)
+                    sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
+                else
+                    sender.sendMessage(prefixed("commands.delhome", sender, home));
+            } else {
+                if (otherHome)
+                    sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
+                else
+                    sender.sendMessage(error("commands.generic.home.failure", sender, home));
+            }
             return true;
         }
-        return true;
+
+        return false;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player))
             return Collections.emptyList();
 
-        if (args.length != 1)
-            return new ArrayList<>(getStorage().getAllHomes((Player) sender).keySet());
 
-        List<String> ret = new ArrayList<>();
-
-        for (String n : getStorage().getAllHomes((Player) sender).keySet()) {
-            if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
-                ret.add(n);
+        if (args.length == 1) {
+            List<String> ret = new ArrayList<>();
+            for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
+                if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
+                    ret.add(n);
+                }
             }
+
+            if (hasOtherPermission(cmd, sender)) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (p.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+                        ret.add(p.getName());
+                    }
+                }
+            }
+            return ret;
         }
 
-        // TODO: With right permission, show player names as well
+        if (args.length == 2 && hasOtherPermission(cmd, sender)) {
+            UUID uuid = getStorage().getUniqueID(args[0]);
+            if (uuid == null)
+                return Collections.emptyList();
 
-        return ret;
+            List<String> ret = new ArrayList<>();
+            for (String n : getStorage().getAllHomes(uuid).keySet()) {
+                if (n.toLowerCase().startsWith(args[1].toLowerCase())) {
+                    ret.add(n);
+                }
+            }
+            return ret;
+        }
+
+        return Collections.emptyList();
+    }
+
+    private boolean hasOtherPermission(Command cmd, CommandSender sender) {
+        return (cmd.getName().equalsIgnoreCase("home") && sender.hasPermission(OTHER_HOME_PERM))
+                || (cmd.getName().equalsIgnoreCase("sethome") && sender.hasPermission(OTHER_SETHOME_PERM))
+                || (cmd.getName().equalsIgnoreCase("delhome") && sender.hasPermission(OTHER_DELHOME_PERM));
     }
 }

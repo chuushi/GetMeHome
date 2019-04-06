@@ -24,6 +24,7 @@ message:
 welcome-home-radius: 4
 
 # Home limits (based on custom permission nodes)
+# Set to -1 for unlimited homes
 limit:
   # default - default home limit. If removed, defaults to 1.
   default: 1

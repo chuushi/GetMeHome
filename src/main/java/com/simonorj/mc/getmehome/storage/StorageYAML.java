@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.storage;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -68,8 +69,8 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public Location getHome(OfflinePlayer player, String name) {
-        ConfigurationSection cs = storage.getConfigurationSection(player.getUniqueId().toString() + ".h." + name);
+    public Location getHome(UUID uuid, String name) {
+        ConfigurationSection cs = storage.getConfigurationSection(uuid.toString() + ".h." + name);
         if (cs == null)
             return null;
 
@@ -87,38 +88,40 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public String getDefaultHomeName(OfflinePlayer player) {
-        String ret = storage.getString(player.getUniqueId().toString() + ".d");
+    public String getDefaultHomeName(UUID uuid) {
+        String ret = storage.getString(uuid.toString() + ".d");
         if (ret == null)
             return "default";
         return ret;
     }
 
     @Override
-    public boolean setDefaultHome(OfflinePlayer player, String name) {
+    public boolean setDefaultHome(UUID uuid, String name) {
         updateFlag = true;
 
-        if (storage.getConfigurationSection(player.getUniqueId().toString() + ".h." + name) == null)
+        if (storage.getConfigurationSection(uuid.toString() + ".h." + name) == null)
             return false;
-        storage.set(player.getUniqueId().toString() + ".d", name);
+        storage.set(uuid.toString() + ".d", name);
         return true;
     }
 
     @Override
-    public boolean setHome(OfflinePlayer player, String name, Location loc) {
+    public boolean setHome(UUID uuid, String name, Location loc) {
         updateFlag = true;
 
-        String uid = player.getUniqueId().toString();
+        String uid = uuid.toString();
         // Increment when adding another home
         ConfigurationSection cs = storage.getConfigurationSection(uid);
         if (cs == null) {
             cs = storage.createSection(uid);
         }
 
+        OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
+
         // Update name
-        storage.set("names." + player.getName().toLowerCase(), player.getUniqueId().toString());
+        storage.set("names." + p.getName().toLowerCase(), uuid.toString());
         if (saveName)
-            cs.set("n", player.getName());
+            cs.set("n", p.getName());
 
         cs = cs.getConfigurationSection("h");
         if (cs == null) {
@@ -141,17 +144,17 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public int getNumberOfHomes(OfflinePlayer player) {
+    public int getNumberOfHomes(UUID uuid) {
         // Size of configuration
-        ConfigurationSection cs = storage.getConfigurationSection(player.getUniqueId() + ".h");
+        ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         if (cs == null)
             return 0;
         return cs.getKeys(false).size();
     }
 
     @Override
-    public boolean deleteHome(OfflinePlayer player, String name) {
-        String path = player.getUniqueId() + ".h." + name;
+    public boolean deleteHome(UUID uuid, String name) {
+        String path = uuid + ".h." + name;
         if (!storage.contains(path))
             return false;
         storage.set(path, null);
@@ -159,8 +162,8 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public Map<String, Location> getAllHomes(OfflinePlayer player) {
-        ConfigurationSection cs = storage.getConfigurationSection(player.getUniqueId() + ".h");
+    public Map<String, Location> getAllHomes(UUID uuid) {
+        ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         HashMap<String, Location> ret = new HashMap<>();
 
         if (cs == null)

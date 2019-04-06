@@ -48,6 +48,11 @@ permissions:
   getmehome.command.delhome:
     description: Allows /delhome
     default: true
+  getmehome.command.delhome.other:
+    description: Allows `/delhome <player> <name>` to delete other player's home
+    default: op
+    children:
+      getmehome.command.delhome: true
   getmehome.command.home:
     description: Allows /home
     default: true
@@ -67,6 +72,11 @@ permissions:
   getmehome.command.sethome:
     description: Allows /sethome
     default: true
+  getmehome.command.sethome.other:
+    description: Allows `/sethome <player> <name>` to set other player's home
+    default: op
+    children:
+      getmehome.command.sethome: true
   getmehome.command.setdefaulthome:
     description: Allows /setdefaulthome
     default: true
