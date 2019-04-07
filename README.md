@@ -14,9 +14,17 @@ configuration is very simple to understand and set up!  It works on Minecraft
 GetMeHome features:
 
 * `/home`, `/sethome`, `/delhome`, and `/listhomes`
-* Support for multi-home by declaring custom permission nodes
-* Ability to change the default home to go to when running `/home` without any
+* Support for **multi-home** by declaring custom permission nodes
+* Ability to **change the default home** to go to when running `/home` without any
   arguments 
+* Individual **localization** based on individual **user's Minecraft game
+  language**, currently supporting:
+  * English (Default)
+    * LOLCAT (v1.0.0)
+    * Pirate Speak (v1.0.1)
+    * Shakespearean English (v1.0.3)
+  * Korean (v1.0.1)
+  * Japanese (Upcoming!)
 * A way to go to or edit other player's homes
 
 # Configuration
@@ -87,8 +95,8 @@ By default, these permissions are given only to server operators.
 
 ## Contributing
 
-I can use some help with language translation. Feel free to create a PR with
-new language resource bundles!
+I can use some help with [localization](src/main/resources/i18n). Feel free to fork and create a PR with
+new languages!
 
 Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information!
 
