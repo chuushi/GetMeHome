@@ -1,6 +1,6 @@
 name: GetMeHome
 version: ${project.version}
-author: SimonOrJ
+author: Simon Chuu
 description: Simple home plugin that just gets you home
 main: com.simonorj.mc.getmehome.GetMeHome
 website: http://github.com/SimonOrJ/GetMeHome
@@ -8,38 +8,75 @@ website: http://github.com/SimonOrJ/GetMeHome
 commands:
   getmehome:
     description: GetMeHome's main (help) command
-    usage: /getmehome [reload|migrate]
+    usage: /getmehome
+  delhome:
+    description: Deletes a set home
+    usage: /delhome [home name]
+    permission: getmehome.command.delhome
   home:
     aliases: [h]
     description: Sends you home
     usage: /home [home name]
+    permission: getmehome.command.home
+  listhomes:
+    aliases: [homes]
+    description: Lists all the homes
+    usage: /listhomes
+    permission: getmehome.command.listhomes
   sethome:
     description: Sets home at your current position
     usage: /sethome [home name]
+    permission: getmehome.command.sethome
   setdefaulthome:
-    aliases: [defaulthome]
-    description: Sets a home name as a default home.
+    description: Sets a different home name as the default home.
     usage: /setdefaulthome <home name>
-  delhome:
-    description: Delets a set home
-    usage: /delhome [home name]
-  listhomes:
-    description: Lists all the homes
-    usage: /listhomes
+    permission: getmehome.command.setdefaulthome
 
 permissions:
   getmehome.reload:
     description: Allows /getmehome reload
     default: op
-  getmehome.migrate:
-    description: Allows /getmehome migrate
-    default: op
-  getmehome.listother:
-    description: Allows /listhomes <player> (as opposed to just /listhomes)
-    default: op
-  getmehome.*:
-    description: Allows all admin commands
+  getmehome.user:
+    description: Allows the user-level usage of home commands
+    default: true
     children:
-      getmehome.reload: true
-      getmehome.migrate: true
-      getmehome.otherhome: true
+      getmehome.command.delhome: true
+      getmehome.command.home: true
+      getmehome.command.listhomes: true
+      getmehome.command.sethome: true
+      getmehome.command.setdefaulthome: true
+  getmehome.command.delhome:
+    description: Allows /delhome
+    default: true
+  getmehome.command.delhome.other:
+    description: Allows `/delhome <player> <name>` to delete other player's home
+    default: op
+    children:
+      getmehome.command.delhome: true
+  getmehome.command.home:
+    description: Allows /home
+    default: true
+  getmehome.command.home.other:
+    description: Allows `/home <player> <home>` to teleport to other user's homes
+    default: op
+    children:
+      getmehome.command.home: true
+  getmehome.command.listhomes:
+    description: Allows /listhomes
+    default: true
+  getmehome.command.listhomes.other:
+    description: Allows `/listhomes <player>` (as opposed to just /listhomes)
+    default: op
+    children:
+      getmehome.command.listhomes: true
+  getmehome.command.sethome:
+    description: Allows /sethome
+    default: true
+  getmehome.command.sethome.other:
+    description: Allows `/sethome <player> <name>` to set other player's home
+    default: op
+    children:
+      getmehome.command.sethome: true
+  getmehome.command.setdefaulthome:
+    description: Allows /setdefaulthome
+    default: true
