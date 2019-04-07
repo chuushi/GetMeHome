@@ -16,7 +16,7 @@ GetMeHome features:
 * `/home`, `/sethome`, `/delhome`, and `/listhomes`
 * Support for **multi-home** by declaring custom permission nodes
 * Ability to **change the default home** to go to when running `/home` without any
-  arguments 
+  arguments (`/setdefaulthome`)
 * Individual **localization** based on individual **user's Minecraft game
   language**, currently supporting:
   * English (Default)
