@@ -9,10 +9,15 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-import static com.simonorj.mc.getmehome.MessageTool.*;
+import static com.simonorj.mc.getmehome.MessageTool.error;
+import static com.simonorj.mc.getmehome.MessageTool.prefixed;
 
 public class HomeCommands implements TabExecutor {
     private static final String OTHER_HOME_PERM = "getmehome.command.home.other";
@@ -82,14 +87,15 @@ public class HomeCommands implements TabExecutor {
                 farAway = true;
             }
 
-            ((Player) sender).teleport(loc);
-
-            if (farAway) {
-                if (otherHome)
-                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
-                else
-                    sender.sendMessage(prefixed("commands.home.success", sender));
-
+            if (((Player) sender).teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
+                if (farAway) {
+                    if (otherHome)
+                        sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
+                    else
+                        sender.sendMessage(prefixed("commands.home.success", sender));
+                }
+            } else {
+                sender.sendMessage(error("commands.home.unable", sender, home));
             }
 
             return true;

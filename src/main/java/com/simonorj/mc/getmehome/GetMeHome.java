@@ -44,7 +44,7 @@ public final class GetMeHome extends JavaPlugin {
         return focusColor;
     }
 
-    ChatColor getContentColor() {
+    public ChatColor getContentColor() {
         return contentColor;
     }
 
