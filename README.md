@@ -14,9 +14,17 @@ configuration is very simple to understand and set up!  It works on Minecraft
 GetMeHome features:
 
 * `/home`, `/sethome`, `/delhome`, and `/listhomes`
-* Support for multi-home by declaring custom permission nodes
-* Ability to change the default home to go to when running `/home` without any
-  arguments 
+* Support for **multi-home** by declaring custom permission nodes
+* Ability to **change the default home** to go to when running `/home` without any
+  arguments (`/setdefaulthome`)
+* Individual **localization** based on individual **user's Minecraft game
+  language**, currently supporting:
+  * English (Default)
+    * LOLCAT (v1.0.0)
+    * Pirate Speak (v1.0.1)
+    * Shakespearean English (v1.0.3)
+  * Korean (v1.0.1)
+  * Japanese (Upcoming!)
 * A way to go to or edit other player's homes
 
 # Configuration
@@ -79,16 +87,16 @@ By default, these permissions are given only to server operators.
   ignores the target player's home limits, so be sure to check the number
   using `/listhomes <player>`!
   * `/sethome <player> <name>`
-* `getmehome.command.delhome`: Allows deletion of other plsyer's home. There is
+* `getmehome.command.delhome`: Allows deletion of other player's home. There is
   no confirmation prompt, so be careful!
   * `/delhome <player> <name>`
-* `getmehome.command.listhomes.other`: Allows listing of other plsyers' homes.
+* `getmehome.command.listhomes.other`: Allows listing of other players' homes.
   * `/listhomes <player>`
 
 ## Contributing
 
-I can use some help with language translation. Feel free to create a PR with
-new language resource bundles!
+I can use some help with [localization](src/main/resources/i18n). Feel free to fork and create a PR with
+new languages!
 
 Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information!
 
