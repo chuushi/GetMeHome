@@ -20,7 +20,7 @@ GetMeHome features:
 * Individual **localization** based on individual **user's Minecraft game
   language**, currently supporting:
   * English (Default)
-    * ɥsᴉlƃuƎ (v1.0.3)
+    * ɥsᴉꞁᵷuƎ (v1.0.3)
     * LOLCAT (v1.0.0)
     * Pirate Speak (v1.0.1)
     * Shakespearean English (v1.0.3)
