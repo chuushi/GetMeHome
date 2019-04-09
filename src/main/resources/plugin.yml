@@ -47,7 +47,6 @@ permissions:
       getmehome.command.setdefaulthome: true
   getmehome.command.delhome:
     description: Allows /delhome
-    default: true
   getmehome.command.delhome.other:
     description: Allows `/delhome <player> <name>` to delete other player's home
     default: op
@@ -55,7 +54,6 @@ permissions:
       getmehome.command.delhome: true
   getmehome.command.home:
     description: Allows /home
-    default: true
   getmehome.command.home.other:
     description: Allows `/home <player> <home>` to teleport to other user's homes
     default: op
@@ -63,7 +61,6 @@ permissions:
       getmehome.command.home: true
   getmehome.command.listhomes:
     description: Allows /listhomes
-    default: true
   getmehome.command.listhomes.other:
     description: Allows `/listhomes <player>` (as opposed to just /listhomes)
     default: op
@@ -71,7 +68,6 @@ permissions:
       getmehome.command.listhomes: true
   getmehome.command.sethome:
     description: Allows /sethome
-    default: true
   getmehome.command.sethome.other:
     description: Allows `/sethome <player> <name>` to set other player's home
     default: op
@@ -79,4 +75,3 @@ permissions:
       getmehome.command.sethome: true
   getmehome.command.setdefaulthome:
     description: Allows /setdefaulthome
-    default: true

@@ -11,6 +11,7 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static com.simonorj.mc.getmehome.MessageTool.*;
 
@@ -50,26 +51,34 @@ public class ListHomesCommand implements TabExecutor {
         Map<String, Location> homes = getStorage().getAllHomes(get.getUniqueId());
         String defaultHome = getStorage().getDefaultHomeName(get.getUniqueId());
 
-        StringBuilder ret = new StringBuilder();
+        Iterator<String> i = homes.keySet().iterator();
+        StringBuilder list;
 
-        if (get == sender)
-            ret.append(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get)));
-        else if (get instanceof Player)
-            ret.append(prefixed("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get)));
-        else
-            ret.append(prefixed("commands.listhomes.other.offline", sender, get.getName(), homes.size()));
+        if (i.hasNext()) {
+            Function<String, String> parse = d -> {
+                if (d.equals(defaultHome))
+                    return ChatColor.BOLD + d + ChatColor.RESET;
+                else
+                    return d;
+            };
 
-        ret.append(plugin.getFocusColor());
+            ChatColor f = plugin.getFocusColor();
+            ChatColor c = plugin.getContentColor();
+            list = new StringBuilder(parse.apply(i.next()));
 
-        // List homes
-        for (String name : homes.keySet()) {
-            if (name.equals(defaultHome))
-                ret.append(' ').append(ChatColor.BOLD).append(name).append(ChatColor.RESET).append(plugin.getFocusColor());
-            else
-                ret.append(' ').append(name);
+            while (i.hasNext()) {
+                list.append(c).append(", ").append(f).append(parse.apply(i.next()));
+            }
+        } else {
+            list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
         }
 
-        sender.sendMessage(ret.toString());
+        if (get == sender)
+            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get), list.toString()));
+        else if (get instanceof Player)
+            sender.sendMessage(prefixed("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get), list.toString()));
+        else
+            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, get.getName(), homes.size(), list.toString()));
         return true;
     }
 
