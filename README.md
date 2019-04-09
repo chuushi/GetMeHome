@@ -20,11 +20,11 @@ GetMeHome features:
 * Individual **localization** based on individual **user's Minecraft game
   language**, currently supporting:
   * English (Default)
-    * ɥsᴉlƃuƎ (v1.0.3)
+    * ɥsᴉꞁᵷuƎ (v1.0.3)
     * LOLCAT (v1.0.0)
     * Pirate Speak (v1.0.1)
     * Shakespearean English (v1.0.3)
-  * Japanese (v1.0.3 by kj_Brooke)
+  * Japanese (v1.0.3; by kj_Brooke)
   * Korean (v1.0.1)
 * A way to go to or edit other player's homes
 
