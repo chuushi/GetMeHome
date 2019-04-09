@@ -1,7 +1,7 @@
-package com.simonorj.mc.getmehome;
+package com.simonorj.mc.getmehome.storage;
 
+import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -14,18 +14,27 @@ import java.util.UUID;
  *
  * @author SimonOrJ
  */
-abstract class HomeStorage {
+@SuppressWarnings("unused")
+public interface HomeStorageAPI {
+    default HomeStorageAPI getAPI() {
+        GetMeHome p = GetMeHome.getInstance();
+        if (p == null)
+            return null;
+
+        return p.getStorage();
+    }
+
     /**
      * Save to database
      */
-    abstract void save();
+    void save();
 
     /**
      * Gets UUID from player name
      * @param player exact name of player to look up
      * @return UUID of player
      */
-    abstract UUID getUniqueID(String player);
+    UUID getUniqueID(String player);
 
     /**
      * Gets home of a player in form of Location.
@@ -34,14 +43,22 @@ abstract class HomeStorage {
      * @param name   Name of the home
      * @return Location of the player home. null if no such home.
      */
-    abstract Location getHome(OfflinePlayer player, String name);
+    Location getHome(UUID player, String name);
 
     /**
      * Gets name of the default home.
      * @param player Player to find home of
      * @return home name. null if no (default) home is set.
      */
-    abstract String getDefaultHomeName(OfflinePlayer player);
+    String getDefaultHomeName(UUID player);
+
+    /**
+     * Sets a different home as a default home
+     * @param player Player name
+     * @param name Home name
+     * @return if name of home exists
+     */
+    boolean setDefaultHome(UUID player, String name);
 
     /**
      * Sets home of a player to their Location.
@@ -51,17 +68,9 @@ abstract class HomeStorage {
      * @param name   Name of the home
      * @return Success of the saving.
      */
-    boolean setHome(Player player, String name) {
-        return setHome(player, name, player.getLocation());
+    default boolean setHome(Player player, String name) {
+        return setHome(player.getUniqueId(), name, player.getLocation());
     }
-
-    /**
-     * Sets a different home as a default home
-     * @param player Player name
-     * @param name Home name
-     * @return if name of home exists
-     */
-    abstract boolean setDefaultHome(OfflinePlayer player, String name);
 
     /**
      * Sets home of a player to the specified Location.
@@ -71,7 +80,7 @@ abstract class HomeStorage {
      * @param loc    Location of the home
      * @return Success of the saving.
      */
-    abstract boolean setHome(OfflinePlayer player, String name, Location loc);
+    boolean setHome(UUID player, String name, Location loc);
 
     /**
      * Gets number of homes set by a player
@@ -79,7 +88,7 @@ abstract class HomeStorage {
      * @param player Player for UUID
      * @return number of homes
      */
-    abstract int getNumberOfHomes(OfflinePlayer player);
+    int getNumberOfHomes(UUID player);
 
     /**
      * Deletes the home of a player.
@@ -88,7 +97,7 @@ abstract class HomeStorage {
      * @param name   Name of the home to delete
      * @return Success of the deleting.
      */
-    abstract boolean deleteHome(OfflinePlayer player, String name);
+    boolean deleteHome(UUID player, String name);
 
     /**
      * Gets a map of every player's homes.
@@ -97,17 +106,18 @@ abstract class HomeStorage {
      * @return HashMap of home names to locations.  Empty set if player has no homes.
      * This assumes the specified Player is a valid player, thus it never returns null.
      */
-    abstract Map<String, Location> getAllHomes(OfflinePlayer player);
+    Map<String, Location> getAllHomes(UUID player);
 
     /**
-     * Gets the entire list of homes.  This should be used only for moving the storage method/type.
+     * Gets the total number of homes set in the plugin
      *
-     * @return an entire map of player homes.
-     * @deprecated Better off using "import" instead.
+     * @return total number of homes stored on the storage
      */
-    @Deprecated
-    abstract Map<UUID, Map<String, Location>> getEntireList();
+    int totalHomes();
 
-    abstract void clearCache();
-
+    /**
+     * Clear cache in case database changed. To be used by
+     * SQL storage methods (provisioning)
+     */
+    void clearCache();
 }
