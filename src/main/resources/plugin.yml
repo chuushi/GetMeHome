@@ -4,6 +4,7 @@ author: Simon Chuu
 description: Simple home plugin that just gets you home
 main: com.simonorj.mc.getmehome.GetMeHome
 website: http://github.com/SimonOrJ/GetMeHome
+api-version: 1.13
 
 commands:
   getmehome:

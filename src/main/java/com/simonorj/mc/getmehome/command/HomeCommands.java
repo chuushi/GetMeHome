@@ -36,16 +36,14 @@ public class HomeCommands implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, final Command cmd, String label, final String[] args) {
         OfflinePlayer target;
-
         boolean otherHome;
 
         if ((args.length >= 2) && hasOtherPermission(cmd, sender)) {
-            UUID uuid = getStorage().getUniqueID(args[0]);
-            if (uuid == null) {
+            target = plugin.getPlayer(args[0]);
+            if (target == null) {
                 sender.sendMessage(error("commands.generic.player.notFound", sender));
                 return true;
             }
-            target = Bukkit.getOfflinePlayer(uuid);
             otherHome = true;
         } else if (sender instanceof Player) {
             target = (Player) sender;

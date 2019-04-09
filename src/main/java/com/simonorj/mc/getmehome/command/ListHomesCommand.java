@@ -32,12 +32,10 @@ public class ListHomesCommand implements TabExecutor {
         // Get player in question
         OfflinePlayer get;
         if (sender.hasPermission(OTHER_PERM) && args.length != 0) {
-            UUID uuid = getStorage().getUniqueID(args[0]);
-            if (uuid == null) {
+            get = plugin.getPlayer(args[0]);
+            if (get == null) {
                 sender.sendMessage(error("commands.generic.player.notFound", sender));
                 return true;
-            } else {
-                get = plugin.getServer().getOfflinePlayer(uuid);
             }
         } else if (sender instanceof Player) {
             get = (Player) sender;

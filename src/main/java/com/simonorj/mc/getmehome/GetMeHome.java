@@ -8,6 +8,7 @@ import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import com.simonorj.mc.getmehome.storage.StorageYAML;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public final class GetMeHome extends JavaPlugin {
@@ -179,4 +181,20 @@ public final class GetMeHome extends JavaPlugin {
         return defaultLimit;
     }
 
+    @SuppressWarnings("deprecation")
+    public OfflinePlayer getPlayer(String name) {
+        UUID uuid = getStorage().getUniqueID(name);
+        if (uuid != null)
+            return getServer().getOfflinePlayer(uuid);
+
+        Player p = getServer().getPlayer(name);
+        if (p != null)
+            return p;
+
+        OfflinePlayer op = getServer().getOfflinePlayer(name);
+        if (op.hasPlayedBefore())
+            return op;
+
+        return null;
+    }
 }
