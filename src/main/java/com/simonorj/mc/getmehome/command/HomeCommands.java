@@ -65,110 +65,114 @@ public class HomeCommands implements TabExecutor {
         else
             home = getStorage().getDefaultHomeName(target.getUniqueId());
 
-        if (cmd.getName().equalsIgnoreCase("home")) {
-            Location loc = getStorage().getHome(target.getUniqueId(), home);
-            // No home
-            if (loc == null) {
-                if (otherHome)
-                    sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
-                else
-                    sender.sendMessage(error("commands.generic.home.failure", sender, home));
-                return true;
-            }
+        if (cmd.getName().equalsIgnoreCase("home"))
+            home((Player) sender, target, home);
+        else if (cmd.getName().equalsIgnoreCase("sethome"))
+            setHome((Player) sender, target, home);
+        else if (cmd.getName().equalsIgnoreCase("setdefaulthome"))
+            setDefaultHome((Player) sender, home);
+        else if (cmd.getName().equalsIgnoreCase("delhome"))
+            deleteHome(sender, target, home);
+        else
+            return false;
 
-            // Welcome home!
-            boolean farAway;
-            if (((Player) sender).getWorld() == loc.getWorld()) {
-                double dist = loc.distanceSquared(((Player) sender).getLocation());
-                farAway = dist > plugin.getWelcomeHomeRadiusSquared();
-            } else {
-                farAway = true;
-            }
+        return true;
+    }
 
-            if (((Player) sender).teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
-                if (farAway) {
-                    if (otherHome)
-                        sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
-                    else
-                        sender.sendMessage(prefixed("commands.home.success", sender));
-                }
-            } else {
-                sender.sendMessage(error("commands.home.unable", sender, home));
-            }
-
-            return true;
-        }
-
-        if (cmd.getName().equalsIgnoreCase("sethome")) {
-            int limit = target instanceof Player ? plugin.getSetLimit((Player) target) : -1;
-            int current = getStorage().getNumberOfHomes(target.getUniqueId());
-            boolean allow;
-            boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
-            if (limit == -1)
-                allow = true;
-            else if (homeExists)
-                allow = limit >= current;
+    private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
+        if (getStorage().deleteHome(target.getUniqueId(), home)) {
+            if (sender == target)
+                sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
             else
-                allow = limit > current;
-
-            if (allow) {
-                if (getStorage().setHome(target.getUniqueId(), home, ((Player) sender).getLocation()))
-                    if (homeExists) {
-                        if (otherHome)
-                            sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
-                        else
-                            sender.sendMessage(prefixed("commands.sethome.relocate", sender, home));
-                    } else {
-                        if (otherHome)
-                            sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
-                        else
-                            sender.sendMessage(prefixed("commands.sethome.new", sender, home));
-                    }
-                else
-                    sender.sendMessage(error("commands.sethome.badLocation", sender));
-            } else {
-                sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
-            }
-            return true;
-        }
-
-        if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
-            if (getStorage().setDefaultHome(((Player) sender).getUniqueId(), home))
-                sender.sendMessage(prefixed("commands.setdefaulthome", sender, home));
+                sender.sendMessage(prefixed("commands.delhome", sender, home));
+        } else {
+            if (sender == target)
+                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
             else
                 sender.sendMessage(error("commands.generic.home.failure", sender, home));
-            return true;
+        }
+    }
+
+    private void home(Player sender, OfflinePlayer target, String home) {
+        Location loc = getStorage().getHome(target.getUniqueId(), home);
+        // No home
+        if (loc == null) {
+            if (sender == target)
+                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
+            else
+                sender.sendMessage(error("commands.generic.home.failure", sender, home));
+            return;
         }
 
-        if (cmd.getName().equalsIgnoreCase("delhome")) {
-            if (getStorage().deleteHome(target.getUniqueId(), home)) {
-                if (otherHome)
-                    sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
+        // Welcome home!
+        boolean farAway;
+        if (sender.getWorld() == loc.getWorld()) {
+            double dist = loc.distanceSquared(sender.getLocation());
+            farAway = dist > plugin.getWelcomeHomeRadiusSquared();
+        } else {
+            farAway = true;
+        }
+
+        if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
+            if (farAway) {
+                if (sender == target)
+                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
                 else
-                    sender.sendMessage(prefixed("commands.delhome", sender, home));
-            } else {
-                if (otherHome)
-                    sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
-                else
-                    sender.sendMessage(error("commands.generic.home.failure", sender, home));
+                    sender.sendMessage(prefixed("commands.home.success", sender));
             }
-            return true;
+        } else {
+            sender.sendMessage(error("commands.home.unable", sender, home));
         }
+    }
 
-        return false;
+    private void setHome(Player sender, OfflinePlayer target, String home) {
+        int limit = target instanceof Player ? plugin.getSetLimit((Player) target) : -1;
+        int current = getStorage().getNumberOfHomes(target.getUniqueId());
+        boolean allow;
+        boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
+        if (limit == -1)
+            allow = true;
+        else if (homeExists)
+            allow = limit >= current;
+        else
+            allow = limit > current;
+
+        if (allow) {
+            if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation()))
+                if (homeExists) {
+                    if (sender == target)
+                        sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
+                    else
+                        sender.sendMessage(prefixed("commands.sethome.relocate", sender, home));
+                } else {
+                    if (sender == target)
+                        sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
+                    else
+                        sender.sendMessage(prefixed("commands.sethome.new", sender, home));
+                }
+            else
+                sender.sendMessage(error("commands.sethome.badLocation", sender));
+        } else {
+            sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
+        }
+    }
+
+    private void setDefaultHome(Player sender, String home) {
+        if (getStorage().setDefaultHome(sender.getUniqueId(), home))
+            sender.sendMessage(prefixed("commands.setdefaulthome", sender, home));
+        else
+            sender.sendMessage(error("commands.generic.home.failure", sender, home));
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player))
-            return Collections.emptyList();
-
-
         if (args.length == 1) {
             List<String> ret = new ArrayList<>();
-            for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
-                if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
-                    ret.add(n);
+            if (sender instanceof Player) {
+                for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
+                    if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
+                        ret.add(n);
+                    }
                 }
             }
 
