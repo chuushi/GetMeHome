@@ -1,4 +1,7 @@
 # ![Logo](https://www.spigotmc.org/data/resource_icons/66/66257.jpg) GetMeHome
+[![Build Status](https://travis-ci.org/SimonOrJ/GetMeHome.svg?branch=master)](https://travis-ci.org/SimonOrJ/GetMeHome)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e45a154be37e3eac2375/maintainability)](https://codeclimate.com/github/SimonOrJ/GetMeHome/maintainability)
+
 *A straightforward Spigot plugin that gets you home*
 
 There are plenty of home plugins out there, but this plugin was built out of
@@ -8,8 +11,8 @@ plugin that I found was either too bloated or too simple. I decided to take it
 on my own, and so, GetMeHome was born.
 
 GetMeHome has all the features you would need for a simple home plugin, and the
-configuration is very simple to understand and set up!  It works on Minecraft
-1.8.8 and up, and it will continue being updated to be future-proof!
+configuration is very simple to understand and set up!  It was tested to work on Minecraft
+1.7 and up, and it will continue being updated to be future-proof!
 
 GetMeHome features:
 

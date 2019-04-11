@@ -4,6 +4,11 @@
     <groupId>com.simonorj.mc.getmehome</groupId>
     <artifactId>GetMeHome</artifactId>
     <version>1.0.4-SNAPSHOT</version>
+    <url>https://github.com/SimonOrJ/GetMeHome</url>
+    <issueManagement>
+        <url>https://github.com/SimonOrJ/GetMeHome/issues</url>
+    </issueManagement>
+    <inceptionYear>2018</inceptionYear>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
