@@ -8,7 +8,7 @@
     <issueManagement>
         <url>https://github.com/SimonOrJ/GetMeHome/issues</url>
     </issueManagement>
-    <inceptionYear>2018</inceptionYear>
+    <inceptionYear>2016</inceptionYear>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
