@@ -21,12 +21,13 @@ public class ConfigTool {
     static final String WELCOME_HOME_RADIUS_NODE = "welcome-home-radius";
 
     static final String LIMIT_ROOT = "limit";
+    static final String WARMUP_ROOT = "warmup";
     static final String DEFAULT_CHILD = "default";
     static final String LIMIT_DEFAULT_NODE = LIMIT_ROOT + "." + DEFAULT_CHILD;
 
     static final String ENABLE_METRICS_NODE = "enable-metrics";
     static final String CONFIG_VERSION_NODE = "config-version";
-    static final int version = 2;
+    static final int version = 3;
 
     private static final String HEADER =
             "# GetMeHome by Simon Chuu\n" +
@@ -69,6 +70,18 @@ public class ConfigTool {
     private static final String LIMIT_CUSTOM__ =
             "  # The rest of the home limit can be listed in this format:\n" +
             "  #   permission.node: maximum number of homes\n" +
+            "  ### Permission on top of this list will be checked first! ###\n";
+
+    private static final String WARMUP =
+            "# Home warm-up in ticks (based on custom permission nodes)\n" +
+            "# 20 ticks = 1 second\n";
+
+    private static final String WARMUP_DEFAULT =
+            "  # default - default warm-up time. If removed, defaults to 0.\n";
+
+    private static final String WARMUP_CUSTOM__ =
+            "  # The rest of the warm up time can be listed in this format:\n" +
+            "  #   permission.node: warm up time in ticks\n" +
             "  ### Permission on top of this list will be checked first! ###\n";
 
     private static final String ENABLE_METRICS =
@@ -115,7 +128,15 @@ public class ConfigTool {
                 '\n' +
                 LIMIT_CUSTOM__ +
                 homeLimitsToString(config.getConfigurationSection(LIMIT_ROOT)) +
+                "\n\n\n" +
+                WARMUP +
+                WARMUP_ROOT + ":\n" +
+                WARMUP_DEFAULT +
+                "  " + DEFAULT_CHILD + ": " + limitDefault + '\n' +
                 '\n' +
+                WARMUP_CUSTOM__ +
+                homeWarmupToString(config.getConfigurationSection(LIMIT_ROOT)) +
+                "\n\n\n" +
                 ENABLE_METRICS +
                 ENABLE_METRICS_NODE + ": " + metrics +
                 "\n\n" +
@@ -136,7 +157,27 @@ public class ConfigTool {
         }
 
         if (ret.length() == 0) {
+            ret.append("  ").append("getmehome.op").append(": ").append(-1).append('\n');
             ret.append("  ").append("getmehome.twohomes").append(": ").append(2).append('\n');
+        }
+
+        return ret.toString();
+    }
+
+    private static String homeWarmupToString(ConfigurationSection cs) {
+        StringBuilder ret = new StringBuilder();
+        for (String s : cs.getKeys(true)) {
+            // Skip default and non-number node
+            if (s.equals(DEFAULT_CHILD) || !cs.isInt(s))
+                continue;
+
+            // put it in
+            ret.append("  ").append(s).append(": ").append(cs.getInt(s)).append('\n');
+        }
+
+        if (ret.length() == 0) {
+            ret.append("  ").append("getmehome.op").append(": ").append(0).append('\n');
+            ret.append("  ").append("getmehome.wait5s").append(": ").append(100).append('\n');
         }
 
         return ret.toString();
