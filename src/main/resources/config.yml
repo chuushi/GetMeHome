@@ -36,6 +36,9 @@ limit:
   getmehome.twohomes: 2
 
 
+  ### ### ###
+# Should the player teleporting to other player's home have warm up delay?
+warmup-when-home-other: false
 
 # Home warm-up in ticks (based on custom permission nodes)
 # 20 ticks = 1 second
@@ -50,7 +53,7 @@ warmup:
   getmehome.warmup5s: 100
 
 
-
+  ### ### ###
 # Enable metrics for this plugin? (If unsure, leave it as true)
 #   Link to metrics: https://bstats.org/plugin/bukkit/GetMeHome/
 enable-metrics: true

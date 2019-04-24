@@ -21,9 +21,12 @@ public class ConfigTool {
     static final String WELCOME_HOME_RADIUS_NODE = "welcome-home-radius";
 
     static final String LIMIT_ROOT = "limit";
-    static final String WARMUP_ROOT = "warmup";
     static final String DEFAULT_CHILD = "default";
     static final String LIMIT_DEFAULT_NODE = LIMIT_ROOT + "." + DEFAULT_CHILD;
+
+    static final String WARMUP_WHEN_HOME_OTHER_NODE = "warmup-when-home-other";
+    static final String WARMUP_ROOT = "warmup";
+    static final String WARMUP_DEFAULT_NODE = WARMUP_ROOT + "." + DEFAULT_CHILD;
 
     static final String ENABLE_METRICS_NODE = "enable-metrics";
     static final String CONFIG_VERSION_NODE = "config-version";
@@ -72,6 +75,10 @@ public class ConfigTool {
             "  #   permission.node: maximum number of homes\n" +
             "  ### Permission on top of this list will be checked first! ###\n";
 
+    private static final String WARMUP_WHEN_HOME_OTHER =
+            "  ### ### ###\n" +
+            "# Should the player teleporting to other player's home have warm up delay?\n";
+
     private static final String WARMUP =
             "# Home warm-up in ticks (based on custom permission nodes)\n" +
             "# 20 ticks = 1 second\n";
@@ -85,6 +92,7 @@ public class ConfigTool {
             "  ### Permission on top of this list will be checked first! ###\n";
 
     private static final String ENABLE_METRICS =
+            "  ### ### ###\n" +
             "# Enable metrics for this plugin? (If unsure, leave it as true)\n" +
             "#   Link to metrics: https://bstats.org/plugin/bukkit/GetMeHome/\n";
 
@@ -100,6 +108,8 @@ public class ConfigTool {
         String messageFocusColor = config.getString(MESSAGE_FOCUS_COLOR_NODE, "f");
         int welcomeHomeRadius = config.getInt(WELCOME_HOME_RADIUS_NODE, 4);
         int limitDefault = config.getInt(LIMIT_DEFAULT_NODE, 1);
+        boolean warmupWhenHomeOther = config.getBoolean(WARMUP_WHEN_HOME_OTHER_NODE, false);
+        int warmupDefault = config.getInt(WARMUP_DEFAULT_NODE, 1);
         boolean metrics = config.getBoolean(ENABLE_METRICS_NODE, true);
 
         return HEADER +
@@ -129,10 +139,12 @@ public class ConfigTool {
                 LIMIT_CUSTOM__ +
                 homeLimitsToString(config.getConfigurationSection(LIMIT_ROOT)) +
                 "\n\n\n" +
+                WARMUP_WHEN_HOME_OTHER +
+                WARMUP_WHEN_HOME_OTHER_NODE + ": " + warmupWhenHomeOther + '\n' +
                 WARMUP +
                 WARMUP_ROOT + ":\n" +
                 WARMUP_DEFAULT +
-                "  " + DEFAULT_CHILD + ": " + limitDefault + '\n' +
+                "  " + DEFAULT_CHILD + ": " + warmupDefault + '\n' +
                 '\n' +
                 WARMUP_CUSTOM__ +
                 homeWarmupToString(config.getConfigurationSection(LIMIT_ROOT)) +
