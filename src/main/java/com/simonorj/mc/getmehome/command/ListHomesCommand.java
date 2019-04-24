@@ -45,9 +45,22 @@ public class ListHomesCommand implements TabExecutor {
             return true;
         }
 
+        listHomes(sender, get);
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+        if (args.length == 1 && sender.hasPermission(OTHER_PERM))
+            return null;
+
+        return Collections.emptyList();
+    }
+
+    private void listHomes(CommandSender sender, OfflinePlayer target) {
         // Get home names owned by player
-        Map<String, Location> homes = getStorage().getAllHomes(get.getUniqueId());
-        String defaultHome = getStorage().getDefaultHomeName(get.getUniqueId());
+        Map<String, Location> homes = getStorage().getAllHomes(target.getUniqueId());
+        String defaultHome = getStorage().getDefaultHomeName(target.getUniqueId());
 
         Iterator<String> i = homes.keySet().iterator();
         StringBuilder list;
@@ -71,20 +84,11 @@ public class ListHomesCommand implements TabExecutor {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
         }
 
-        if (get == sender)
-            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) get), list.toString()));
-        else if (get instanceof Player)
-            sender.sendMessage(prefixed("commands.listhomes.other", sender, get.getName(), homes.size(), plugin.getSetLimit((Player) get), list.toString()));
+        if (target == sender)
+            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) target), list.toString()));
+        else if (target instanceof Player)
+            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), homes.size(), plugin.getSetLimit((Player) target), list.toString()));
         else
-            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, get.getName(), homes.size(), list.toString()));
-        return true;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length == 1 && sender.hasPermission(OTHER_PERM))
-            return null;
-
-        return Collections.emptyList();
+            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), homes.size(), list.toString()));
     }
 }
