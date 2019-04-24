@@ -136,6 +136,23 @@ public class HomeCommands implements TabExecutor {
         }
 
         // Welcome home!
+        long delay = delayTeleport(sender, target);
+        if (delay <= 0L)
+            // TODO: Delay Message
+            Bukkit.getScheduler().runTaskLater(plugin, () -> teleportHome(sender, target, home, loc), delay);
+        else
+            teleportHome(sender, target, home, loc);
+
+   }
+
+    private long delayTeleport(Player sender, OfflinePlayer target) {
+        if (sender == target || plugin.getWarmupWhenHomeOther())
+            return plugin.getWarmupDelay(sender);
+
+        return 0L;
+    }
+
+    private void teleportHome(Player sender, OfflinePlayer target, String home, Location loc) {
         boolean farAway;
         if (sender.getWorld() == loc.getWorld()) {
             double dist = loc.distanceSquared(sender.getLocation());

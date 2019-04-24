@@ -23,7 +23,10 @@ public final class GetMeHome extends JavaPlugin {
     private static GetMeHome instance;
     private HomeStorageAPI storage;
     private List<HomePermissionLimit> homePermissionLimit;
+    private List<WarmupDelay> warmupDelay;
     private int defaultLimit;
+    private long defaultWarmup;
+    private boolean warmupWhenHomeOther;
 
     private String prefix;
     private ChatColor focusColor;
@@ -48,24 +51,6 @@ public final class GetMeHome extends JavaPlugin {
 
     public ChatColor getContentColor() {
         return contentColor;
-    }
-
-    // TODO: Move all kind of configuration storage logic elsewhere
-    private final class HomePermissionLimit {
-        private final String permission;
-        private final int limit;
-        HomePermissionLimit(String permission, int limit) {
-            this.permission = permission;
-            this.limit = limit;
-        }
-        String getPermission() {
-            return permission;
-        }
-
-        int getLimit() {
-            return limit;
-        }
-
     }
 
     @Override
@@ -142,6 +127,7 @@ public final class GetMeHome extends JavaPlugin {
 
     public void loadConfig() {
         this.homePermissionLimit = new ArrayList<>();
+        this.warmupDelay = new ArrayList<>();
 
         this.defaultLimit = getConfig().getInt(ConfigTool.LIMIT_DEFAULT_NODE, 1);
         ConfigurationSection csl = getConfig().getConfigurationSection(ConfigTool.LIMIT_ROOT);
@@ -159,8 +145,24 @@ public final class GetMeHome extends JavaPlugin {
             }
         }
 
-        int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
+        this.defaultWarmup = getConfig().getLong(ConfigTool.WARMUP_DEFAULT_NODE, 0L);
+        csl = getConfig().getConfigurationSection(ConfigTool.WARMUP_ROOT);
 
+        if (csl == null) {
+            getLogger().warning("Configuration invalid or missing: " + ConfigTool.WARMUP_ROOT);
+        } else {
+            for (String s : csl.getKeys(true)) {
+                // Skip default and non-number node
+                if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isLong(s))
+                    continue;
+
+                // put it in
+                warmupDelay.add(new WarmupDelay(s, csl.getLong(s)));
+            }
+        }
+
+        this.warmupWhenHomeOther = getConfig().getBoolean(ConfigTool.WARMUP_WHEN_HOME_OTHER_NODE, false);
+        int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
         this.welcomeHomeRadiusSquared = whr * whr;
         this.prefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]"));
         this.contentColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_CONTENT_COLOR_NODE, "e"));
@@ -179,6 +181,55 @@ public final class GetMeHome extends JavaPlugin {
             }
         }
         return defaultLimit;
+    }
+
+    public boolean getWarmupWhenHomeOther() {
+        return warmupWhenHomeOther;
+    }
+
+    public long getWarmupDelay(Player p) {
+        // Override if has permission node
+        for (WarmupDelay l : warmupDelay) {
+            if (p.hasPermission(l.getPermission())) {
+                return l.getDelay();
+            }
+        }
+        return defaultWarmup;
+    }
+
+    // TODO: Move all kind of configuration storage logic elsewhere
+    private final class HomePermissionLimit {
+        private final String permission;
+        private final int limit;
+        HomePermissionLimit(String permission, int limit) {
+            this.permission = permission;
+            this.limit = limit;
+        }
+
+        String getPermission() {
+            return permission;
+        }
+
+        int getLimit() {
+            return limit;
+        }
+    }
+
+    private final class WarmupDelay {
+        private final String permission;
+        private final long delay;
+        WarmupDelay(String permission, long delay) {
+            this.permission = permission;
+            this.delay = delay;
+        }
+
+        String getPermission() {
+            return permission;
+        }
+
+        long getDelay() {
+            return delay;
+        }
     }
 
     @SuppressWarnings("deprecation")
