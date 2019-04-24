@@ -81,15 +81,10 @@ public class HomeCommands implements TabExecutor {
 
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
         if (getStorage().deleteHome(target.getUniqueId(), home)) {
-            if (sender == target)
-                sender.sendMessage(prefixed("commands.delhome", sender, home));
-            else
-                sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
+            String i18n = "commands.delhome" + (sender == target ? "" : ".other");
+            sender.sendMessage(preparedMessage(i18n, sender, target, home));
         } else {
-            if (sender == target)
-                sender.sendMessage(error("commands.generic.home.failure", sender, home));
-            else
-                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
+            sender.sendMessage(genericHomeFailureMessage(sender, target, home));
         }
     }
 
@@ -97,10 +92,7 @@ public class HomeCommands implements TabExecutor {
         Location loc = getStorage().getHome(target.getUniqueId(), home);
         // No home
         if (loc == null) {
-            if (sender == target)
-                sender.sendMessage(error("commands.generic.home.failure", sender, home));
-            else
-                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
+            sender.sendMessage(genericHomeFailureMessage(sender, target, home));
             return;
         }
 
@@ -115,10 +107,10 @@ public class HomeCommands implements TabExecutor {
 
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
             if (farAway) {
-                if (sender == target)
-                    sender.sendMessage(prefixed("commands.home.success", sender));
-                else
-                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
+                String i18n = "commands.home"
+                        + (sender == target ? "" : ".other")
+                        + ".success";
+                sender.sendMessage(preparedMessage(i18n, sender, target, home));
             }
         } else {
             sender.sendMessage(error("commands.home.unable", sender, home));
@@ -138,20 +130,14 @@ public class HomeCommands implements TabExecutor {
             allow = limit > current;
 
         if (allow) {
-            if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation()))
-                if (homeExists) {
-                    if (sender == target)
-                        sender.sendMessage(prefixed("commands.sethome.relocate", sender, home));
-                    else
-                        sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
-                } else {
-                    if (sender == target)
-                        sender.sendMessage(prefixed("commands.sethome.new", sender, home));
-                    else
-                        sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
-                }
-            else
+            if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {
+                String i18n = "commands.sethome."
+                        + (homeExists ? "relocate" : "new")
+                        + (sender == target ? "" : ".other");
+                sender.sendMessage(preparedMessage(i18n, sender, target, home));
+            } else {
                 sender.sendMessage(error("commands.sethome.badLocation", sender));
+            }
         } else {
             sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
         }
@@ -162,6 +148,20 @@ public class HomeCommands implements TabExecutor {
             sender.sendMessage(prefixed("commands.setdefaulthome", sender, home));
         else
             sender.sendMessage(error("commands.generic.home.failure", sender, home));
+    }
+
+    private String preparedMessage(String i18n, CommandSender sender, OfflinePlayer target, String home) {
+        if (sender == target)
+            return prefixed(i18n, sender, home);
+        else
+            return prefixed(i18n, sender, target.getName(), home);
+    }
+
+    private String genericHomeFailureMessage(CommandSender sender, OfflinePlayer target, String home) {
+        if (sender == target)
+            return error("commands.generic.home.failure", sender, home);
+        else
+            return error("commands.generic.home.other.failure", sender, target.getName(), home);
     }
 
     @Override
