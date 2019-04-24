@@ -82,14 +82,14 @@ public class HomeCommands implements TabExecutor {
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
         if (getStorage().deleteHome(target.getUniqueId(), home)) {
             if (sender == target)
-                sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
-            else
                 sender.sendMessage(prefixed("commands.delhome", sender, home));
+            else
+                sender.sendMessage(prefixed("commands.delhome.other", sender, target.getName(), home));
         } else {
             if (sender == target)
-                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
-            else
                 sender.sendMessage(error("commands.generic.home.failure", sender, home));
+            else
+                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
         }
     }
 
@@ -98,9 +98,9 @@ public class HomeCommands implements TabExecutor {
         // No home
         if (loc == null) {
             if (sender == target)
-                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
-            else
                 sender.sendMessage(error("commands.generic.home.failure", sender, home));
+            else
+                sender.sendMessage(error("commands.generic.home.other.failure", sender, target.getName(), home));
             return;
         }
 
@@ -116,9 +116,9 @@ public class HomeCommands implements TabExecutor {
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
             if (farAway) {
                 if (sender == target)
-                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
-                else
                     sender.sendMessage(prefixed("commands.home.success", sender));
+                else
+                    sender.sendMessage(prefixed("commands.home.other.success", sender, target.getName(), home));
             }
         } else {
             sender.sendMessage(error("commands.home.unable", sender, home));
@@ -141,14 +141,14 @@ public class HomeCommands implements TabExecutor {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation()))
                 if (homeExists) {
                     if (sender == target)
-                        sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
-                    else
                         sender.sendMessage(prefixed("commands.sethome.relocate", sender, home));
+                    else
+                        sender.sendMessage(prefixed("commands.sethome.relocate.other", sender, target.getName(), home));
                 } else {
                     if (sender == target)
-                        sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
-                    else
                         sender.sendMessage(prefixed("commands.sethome.new", sender, home));
+                    else
+                        sender.sendMessage(prefixed("commands.sethome.new.other", sender, target.getName(), home));
                 }
             else
                 sender.sendMessage(error("commands.sethome.badLocation", sender));
