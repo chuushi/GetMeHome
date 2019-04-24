@@ -79,6 +79,45 @@ public class HomeCommands implements TabExecutor {
         return true;
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+        if (args.length == 1) {
+            List<String> ret = new ArrayList<>();
+            if (sender instanceof Player) {
+                for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
+                    if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
+                        ret.add(n);
+                    }
+                }
+            }
+
+            if (hasOtherPermission(cmd, sender)) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (p.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+                        ret.add(p.getName());
+                    }
+                }
+            }
+            return ret;
+        }
+
+        if (args.length == 2 && hasOtherPermission(cmd, sender)) {
+            UUID uuid = getStorage().getUniqueID(args[0]);
+            if (uuid == null)
+                return Collections.emptyList();
+
+            List<String> ret = new ArrayList<>();
+            for (String n : getStorage().getAllHomes(uuid).keySet()) {
+                if (n.toLowerCase().startsWith(args[1].toLowerCase())) {
+                    ret.add(n);
+                }
+            }
+            return ret;
+        }
+
+        return Collections.emptyList();
+    }
+
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
         if (getStorage().deleteHome(target.getUniqueId(), home)) {
             String i18n = "commands.delhome" + (sender == target ? "" : ".other");
@@ -162,45 +201,6 @@ public class HomeCommands implements TabExecutor {
             return error("commands.generic.home.failure", sender, home);
         else
             return error("commands.generic.home.other.failure", sender, target.getName(), home);
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length == 1) {
-            List<String> ret = new ArrayList<>();
-            if (sender instanceof Player) {
-                for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
-                    if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
-                        ret.add(n);
-                    }
-                }
-            }
-
-            if (hasOtherPermission(cmd, sender)) {
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (p.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
-                        ret.add(p.getName());
-                    }
-                }
-            }
-            return ret;
-        }
-
-        if (args.length == 2 && hasOtherPermission(cmd, sender)) {
-            UUID uuid = getStorage().getUniqueID(args[0]);
-            if (uuid == null)
-                return Collections.emptyList();
-
-            List<String> ret = new ArrayList<>();
-            for (String n : getStorage().getAllHomes(uuid).keySet()) {
-                if (n.toLowerCase().startsWith(args[1].toLowerCase())) {
-                    ret.add(n);
-                }
-            }
-            return ret;
-        }
-
-        return Collections.emptyList();
     }
 
     private boolean hasOtherPermission(Command cmd, CommandSender sender) {
