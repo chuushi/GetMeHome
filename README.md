@@ -113,3 +113,5 @@ Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information!
 * [Spigot resource link](https://www.spigotmc.org/resources/getmehome.66257/)
 * [BukkitDev resource link](https://dev.bukkit.org/projects/getmehome)
 * [bStats Metrics](https://bstats.org/plugin/bukkit/GetMeHome/)
+
+[![bStats GetMeHome Signature](https://bstats.org/signatures/bukkit/GetMeHome.svg)](https://bstats.org/plugin/bukkit/GetMeHome/)
