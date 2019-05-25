@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -74,6 +75,7 @@ public final class GetMeHome extends JavaPlugin {
                 ConfigUpgrader.upTo3();
             }
             saveConfig();
+            GetMeHome.getInstance().getLogger().info("Updating configuration to version " + ConfigTool.version);
         }
 
         loadConfig();
@@ -120,10 +122,15 @@ public final class GetMeHome extends JavaPlugin {
     @Override
     public void saveConfig() {
         File configFile = new File(getDataFolder(), "config.yml");
+        File bkup = new File(getDataFolder(), "config.bkup.yml");
 
         try {
             //noinspection ResultOfMethodCallIgnored
             configFile.mkdirs();
+
+            // Back up config.yml first
+            Files.copy(configFile.toPath(), bkup.toPath());
+
             String data = ConfigTool.saveToString(getConfig());
 
             try (Writer writer = new OutputStreamWriter(new FileOutputStream(configFile), Charsets.UTF_8)) {

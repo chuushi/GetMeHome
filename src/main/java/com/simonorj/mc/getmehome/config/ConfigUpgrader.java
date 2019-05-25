@@ -1,14 +1,17 @@
 package com.simonorj.mc.getmehome.config;
 
+import com.google.common.base.Charsets;
 import com.simonorj.mc.getmehome.GetMeHome;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.logging.Level;
 
 public class ConfigUpgrader {
     public static void upTo3() {
         final String LIMIT_ROOT = "limit";
+        final String DEFAULT = "default";
         final String LIMIT_DEFAULT_NODE = "limit.default";
         final String DEFAULT_LIMIT_NODE = "default.limit";
         GetMeHome pl = GetMeHome.getInstance();
@@ -18,16 +21,37 @@ public class ConfigUpgrader {
 
         // Move Home Limits configuration from config.yml to limit.yml
         limitc.set(DEFAULT_LIMIT_NODE, pl.getConfig().getInt(LIMIT_DEFAULT_NODE, 1));
-        limitc.set(LIMIT_ROOT, pl.getConfig().getConfigurationSection(LIMIT_ROOT));
-        limitc.set(LIMIT_DEFAULT_NODE, null);
+        limitc.set(LIMIT_ROOT, null);
 
-        // TODO: Set Header Comments; see if this works
+        // Make sure to set header comments
         limitc.options().copyHeader(true);
 
+        // Using traditional method keeps breaking up the permission node-style periods.
+        // So I had to build this kind of monstery ;-;
+        GetMeHome.getInstance().getLogger().warning("Moving home limits configuration from config.yml to homes.yml...");
         try {
-            limitc.save(limitf);
+            StringBuilder data = new StringBuilder(limitc.saveToString());
+            data.append("\nlimit:\n");
+
+            ConfigurationSection cs = pl.getConfig().getConfigurationSection(LIMIT_ROOT);
+
+            for (String key : cs.getKeys(true)) {
+                if (!cs.isInt(key) || key.equals(DEFAULT))
+                    continue;
+
+                data.append("  ")
+                        .append(key)
+                        .append(": ")
+                        .append(cs.getInt(key))
+                        .append('\n');
+            }
+
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(limitf), Charsets.UTF_8)) {
+                writer.write(data.toString());
+            }
         } catch (IOException e) {
-            GetMeHome.getInstance().getLogger().severe("Could not update/save home limit information to \"limit.yml\"!");
+            pl.getLogger().log(Level.SEVERE, "Could not update/save home limit information to 'limit.yml'", e);
         }
+        GetMeHome.getInstance().getLogger().info("Home limits configuration moved to homes.yml!");
     }
 }

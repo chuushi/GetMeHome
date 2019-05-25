@@ -67,15 +67,21 @@ public class PermValue {
 
     static List<PermValue> toList(ConfigurationSection cs) {
         ArrayList<PermValue> ret = new ArrayList<>();
-        for (String perm : cs.getKeys(false))
+        for (String perm : cs.getKeys(true)) {
+            if (cs.isInt(perm)
+                    || cs.isList(perm)
+                    || cs.isInt(perm + '.' + VALUE_CHILD_NODE)
+            )
+                continue;
             ret.add(parsePermissionGroup(perm, cs));
+        }
         return ret;
     }
 
     static PermValue parsePermissionGroup(String perm, ConfigurationSection cs) {
         if (cs.isInt(perm))
             return new PermValue(perm, new Value(cs.getInt(perm)));
-        else if (cs.contains(perm + "." + VALUE_CHILD_NODE))
+        else if (cs.isInt(perm + "." + VALUE_CHILD_NODE))
             return new PermValue(perm, parseValue(cs.getConfigurationSection(perm)));
         else if (cs.isList(perm))
             return new PermValue(perm, parseValues(cs.getMapList(perm)));
