@@ -9,12 +9,13 @@
 #
 #   permission.node2:
 #     value:          Home Limit
-#     operation:      set | add | subtract (optional)
+#     operation:      set | world | add | subtract (optional)
+#     worlds:         [world_name(s), ...] (optional)
 #
 #   permission.node3:
 #     - value:        Home Limit
 #       operation:    set | world | add | subtract (optional)
-#       world:        [world_name(s), ...] (optional)
+#       worlds:       [world_name(s), ...] (optional)
 #     - (repeat for other worlds... optional)
 #
 ### Permission on top of this list will be checked first! ###
@@ -27,10 +28,10 @@ default:
 limit:
   getmehome.unlimited: -1
   getmehome.endhome:
-    - value: 1
-      operation: add
-      worlds:
-        - world_the_end
+    value: 1
+    operation: add
+    worlds:
+      - world_the_end
   getmehome.onemorehome:
     value: 1
     operation: add

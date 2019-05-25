@@ -23,5 +23,5 @@ message:
 #   Set to -1 to disable "Welcome home" message
 welcome-home-radius: 4
 
-# Should the player teleporting to other player's home have warm up delay?
-warmup-when-home-other: false
+# Should the player teleporting to other player's home have any delay?
+delay-when-home-other: false

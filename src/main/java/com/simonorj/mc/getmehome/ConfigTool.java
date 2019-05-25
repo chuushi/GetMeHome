@@ -1,8 +1,6 @@
 package com.simonorj.mc.getmehome;
 
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 public class ConfigTool {
     private static final String STORAGE_ROOT = "storage";
@@ -19,14 +17,10 @@ public class ConfigTool {
 
     static final String WELCOME_HOME_RADIUS_NODE = "welcome-home-radius";
 
-    static final String WARMUP_WHEN_HOME_OTHER_NODE = "warmup-when-home-other";
+    static final String DELAY_WHEN_HOME_OTHER_NODE = "delay-when-home-other";
 
     static final String CONFIG_VERSION_NODE = "config-version";
     static final int version = 3;
-
-    static final String _DEP_LIMIT_ROOT = "limit";
-    static final String _DEP_DEFAULT_CHILD = "default";
-    static final String _DEP_LIMIT_DEFAULT_NODE = _DEP_LIMIT_ROOT + "." + _DEP_DEFAULT_CHILD;
 
     private static final String HEADER =
             "# GetMeHome by Simon Chuu\n" +
@@ -59,8 +53,8 @@ public class ConfigTool {
             "# on /home\n" +
             "#   Set to -1 to disable \"Welcome home\" message\n";
 
-    private static final String WARMUP_WHEN_HOME_OTHER =
-            "# Should the player teleporting to other player's home have warm up delay?\n";
+    private static final String DELAY_WHEN_HOME_OTHER =
+            "# Should the player teleporting to other player's home have any delay?\n";
 
     private static final String CONFIG_VERSION =
             "# Keeps track of configuration version -- do not change!\n";
@@ -71,7 +65,7 @@ public class ConfigTool {
         String messageContentColor = config.getString(MESSAGE_CONTENT_COLOR_NODE, "e");
         String messageFocusColor = config.getString(MESSAGE_FOCUS_COLOR_NODE, "f");
         int welcomeHomeRadius = config.getInt(WELCOME_HOME_RADIUS_NODE, 4);
-        boolean warmupWhenHomeOther = config.getBoolean(WARMUP_WHEN_HOME_OTHER_NODE, false);
+        boolean warmupWhenHomeOther = config.getBoolean(DELAY_WHEN_HOME_OTHER_NODE, false);
 
         return HEADER +
                 '\n' +
@@ -92,8 +86,8 @@ public class ConfigTool {
                 WELCOME_HOME_RADIUS +
                 WELCOME_HOME_RADIUS_NODE + ": " + welcomeHomeRadius + '\n' +
                 '\n' +
-                WARMUP_WHEN_HOME_OTHER +
-                WARMUP_WHEN_HOME_OTHER_NODE + ": " + warmupWhenHomeOther + '\n' +
+                DELAY_WHEN_HOME_OTHER +
+                DELAY_WHEN_HOME_OTHER_NODE + ": " + warmupWhenHomeOther + '\n' +
                 '\n' +
                 CONFIG_VERSION +
                 CONFIG_VERSION_NODE + ": " + version +

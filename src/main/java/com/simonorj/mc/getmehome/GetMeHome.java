@@ -4,54 +4,45 @@ import com.google.common.base.Charsets;
 import com.simonorj.mc.getmehome.command.HomeCommands;
 import com.simonorj.mc.getmehome.command.ListHomesCommand;
 import com.simonorj.mc.getmehome.command.MetaCommand;
+import com.simonorj.mc.getmehome.config.ConfigUpgrader;
+import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import com.simonorj.mc.getmehome.storage.StorageYAML;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public final class GetMeHome extends JavaPlugin {
     private static GetMeHome instance;
     private HomeStorageAPI storage;
-    private List<HomePermissionLimit> homePermissionLimit;
-    private List<WarmupDelay> warmupDelay;
-    private int defaultLimit;
-    private long defaultWarmup;
-    private boolean warmupWhenHomeOther;
+    private boolean delayWhenHomeOther;
+
+    private YamlPermValue limit;
+    private YamlPermValue warmup;
+    private YamlPermValue cooldown;
 
     private String prefix;
     private ChatColor focusColor;
     private ChatColor contentColor;
     private int welcomeHomeRadiusSquared;
 
-    public static GetMeHome getInstance() {
-        return instance;
-    }
+    public static GetMeHome getInstance() { return instance; }
+    public int getWelcomeHomeRadiusSquared() { return welcomeHomeRadiusSquared; }
+    public YamlPermValue getLimit() { return limit; }
+    public YamlPermValue getWarmup() { return warmup; }
+    public YamlPermValue getCooldown() { return cooldown; }
+    public ChatColor getFocusColor() { return focusColor; }
+    public ChatColor getContentColor() { return contentColor; }
 
-    public int getWelcomeHomeRadiusSquared() {
-        return welcomeHomeRadiusSquared;
-    }
-
-    String getPrefix() {
-        return prefix;
-    }
-
-    public ChatColor getFocusColor() {
-        return focusColor;
-    }
-
-    public ChatColor getContentColor() {
-        return contentColor;
-    }
+    String getPrefix() { return prefix; }
 
     @Override
     public void onEnable() {
@@ -68,22 +59,38 @@ public final class GetMeHome extends JavaPlugin {
         // Get config
         saveDefaultConfig();
 
-        if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) != ConfigTool.version)
+        File limitf = new File(getDataFolder(), "limit.yml");
+        File delayf = new File(getDataFolder(), "delay.yml");
+
+        if (!limitf.exists()) saveResource("limit.yml", false);
+        if (!delayf.exists()) saveResource("delay.yml", false);
+
+        this.limit = new YamlPermValue(YamlConfiguration.loadConfiguration(limitf), "limit");
+        this.warmup = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "warmup");
+        this.cooldown = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "cooldown");
+
+        if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) != ConfigTool.version) {
+            // 3: when limit.yml and delay.yml were created
+            if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) < 3) {
+                ConfigUpgrader.upTo3();
+            }
             saveConfig();
+        }
 
         loadConfig();
         loadStorage();
 
         getServer().getPluginManager().registerEvents(new SaveListener(), this);
 
-        if (getConfig().getBoolean(ConfigTool.ENABLE_METRICS_NODE, true))
-            setupMetrics();
+        setupMetrics();
     }
 
     private void setupMetrics() {
         Metrics metrics = new Metrics(this);
         metrics.addCustomChart(new Metrics.SimplePie("prefixBranding", () -> {
             String pre = getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
+            if (pre.isEmpty())
+                return "Empty";
             if (pre.equals("&6[GetMeHome]"))
                 return "Unchanged";
             if (pre.toLowerCase().contains("getmehome"))
@@ -102,8 +109,11 @@ public final class GetMeHome extends JavaPlugin {
         if (storage != null)
             storage.save();
 
+        this.limit = null;
+        this.warmup = null;
+        this.cooldown = null;
+
         this.prefix = null;
-        this.homePermissionLimit = null;
         this.storage = null;
         GetMeHome.instance = null;
     }
@@ -125,43 +135,16 @@ public final class GetMeHome extends JavaPlugin {
         }
     }
 
+
     public void loadConfig() {
-        this.homePermissionLimit = new ArrayList<>();
-        this.warmupDelay = new ArrayList<>();
+        File limitf = new File(getDataFolder(), "limit.yml");
+        File delayf = new File(getDataFolder(), "delay.yml");
 
-        this.defaultLimit = getConfig().getInt(ConfigTool.LIMIT_DEFAULT_NODE, 1);
-        ConfigurationSection csl = getConfig().getConfigurationSection(ConfigTool.LIMIT_ROOT);
+        this.limit = new YamlPermValue(YamlConfiguration.loadConfiguration(limitf), "limit");
+        this.warmup = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "warmup");
+        this.cooldown = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "cooldown");
+        this.delayWhenHomeOther = getConfig().getBoolean(ConfigTool.DELAY_WHEN_HOME_OTHER_NODE, false);
 
-        if (csl == null) {
-            getLogger().warning("Configuration invalid or missing: " + ConfigTool.LIMIT_ROOT);
-        } else {
-            for (String s : csl.getKeys(true)) {
-                // Skip default and non-number node
-                if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isInt(s))
-                    continue;
-
-                // put it in
-                homePermissionLimit.add(new HomePermissionLimit(s, csl.getInt(s)));
-            }
-        }
-
-        this.defaultWarmup = getConfig().getLong(ConfigTool.WARMUP_DEFAULT_NODE, 0L);
-        csl = getConfig().getConfigurationSection(ConfigTool.WARMUP_ROOT);
-
-        if (csl == null) {
-            getLogger().warning("Configuration invalid or missing: " + ConfigTool.WARMUP_ROOT);
-        } else {
-            for (String s : csl.getKeys(true)) {
-                // Skip default and non-number node
-                if (s.equals(ConfigTool.DEFAULT_CHILD) || !csl.isLong(s))
-                    continue;
-
-                // put it in
-                warmupDelay.add(new WarmupDelay(s, csl.getLong(s)));
-            }
-        }
-
-        this.warmupWhenHomeOther = getConfig().getBoolean(ConfigTool.WARMUP_WHEN_HOME_OTHER_NODE, false);
         int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
         this.welcomeHomeRadiusSquared = whr * whr;
         this.prefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]"));
@@ -173,63 +156,18 @@ public final class GetMeHome extends JavaPlugin {
         return storage;
     }
 
+    @Deprecated
     public int getSetLimit(Player p) {
-        // Override if has permission node
-        for (HomePermissionLimit l : homePermissionLimit) {
-            if (p.hasPermission(l.getPermission())) {
-                return l.getLimit();
-            }
-        }
-        return defaultLimit;
+        return limit.calcFor(p).value;
     }
 
-    public boolean getWarmupWhenHomeOther() {
-        return warmupWhenHomeOther;
+    public boolean getDelayWhenHomeOther() {
+        return delayWhenHomeOther;
     }
 
+    @Deprecated
     public long getWarmupDelay(Player p) {
-        // Override if has permission node
-        for (WarmupDelay l : warmupDelay) {
-            if (p.hasPermission(l.getPermission())) {
-                return l.getDelay();
-            }
-        }
-        return defaultWarmup;
-    }
-
-    // TODO: Move all kind of configuration storage logic elsewhere
-    private final class HomePermissionLimit {
-        private final String permission;
-        private final int limit;
-        HomePermissionLimit(String permission, int limit) {
-            this.permission = permission;
-            this.limit = limit;
-        }
-
-        String getPermission() {
-            return permission;
-        }
-
-        int getLimit() {
-            return limit;
-        }
-    }
-
-    private final class WarmupDelay {
-        private final String permission;
-        private final long delay;
-        WarmupDelay(String permission, long delay) {
-            this.permission = permission;
-            this.delay = delay;
-        }
-
-        String getPermission() {
-            return permission;
-        }
-
-        long getDelay() {
-            return delay;
-        }
+        return warmup.calcFor(p).value;
     }
 
     @SuppressWarnings("deprecation")

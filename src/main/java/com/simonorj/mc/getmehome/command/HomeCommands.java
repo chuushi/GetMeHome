@@ -142,11 +142,10 @@ public class HomeCommands implements TabExecutor {
             Bukkit.getScheduler().runTaskLater(plugin, () -> teleportHome(sender, target, home, loc), delay);
         else
             teleportHome(sender, target, home, loc);
-
    }
 
     private long delayTeleport(Player sender, OfflinePlayer target) {
-        if (sender == target || plugin.getWarmupWhenHomeOther())
+        if (sender == target || plugin.getDelayWhenHomeOther())
             return plugin.getWarmupDelay(sender);
 
         return 0L;
