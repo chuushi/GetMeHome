@@ -17,8 +17,6 @@ public class ConfigTool {
 
     static final String WELCOME_HOME_RADIUS_NODE = "welcome-home-radius";
 
-    static final String DELAY_WHEN_HOME_OTHER_NODE = "delay-when-home-other";
-
     static final String CONFIG_VERSION_NODE = "config-version";
     static final int version = 3;
 
@@ -53,9 +51,6 @@ public class ConfigTool {
             "# on /home\n" +
             "#   Set to -1 to disable \"Welcome home\" message\n";
 
-    private static final String DELAY_WHEN_HOME_OTHER =
-            "# Should the player teleporting to other player's home have any delay?\n";
-
     private static final String CONFIG_VERSION =
             "# Keeps track of configuration version -- do not change!\n";
 
@@ -65,7 +60,6 @@ public class ConfigTool {
         String messageContentColor = config.getString(MESSAGE_CONTENT_COLOR_NODE, "e");
         String messageFocusColor = config.getString(MESSAGE_FOCUS_COLOR_NODE, "f");
         int welcomeHomeRadius = config.getInt(WELCOME_HOME_RADIUS_NODE, 4);
-        boolean warmupWhenHomeOther = config.getBoolean(DELAY_WHEN_HOME_OTHER_NODE, false);
 
         return HEADER +
                 '\n' +
@@ -85,9 +79,6 @@ public class ConfigTool {
                 '\n' +
                 WELCOME_HOME_RADIUS +
                 WELCOME_HOME_RADIUS_NODE + ": " + welcomeHomeRadius + '\n' +
-                '\n' +
-                DELAY_WHEN_HOME_OTHER +
-                DELAY_WHEN_HOME_OTHER_NODE + ": " + warmupWhenHomeOther + '\n' +
                 '\n' +
                 CONFIG_VERSION +
                 CONFIG_VERSION_NODE + ": " + version +

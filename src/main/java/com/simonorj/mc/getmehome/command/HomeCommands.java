@@ -136,19 +136,21 @@ public class HomeCommands implements TabExecutor {
         }
 
         // Welcome home!
-        long delay = delayTeleport(sender, target);
-        if (delay <= 0L)
+        int delay = delayTeleport(sender, target);
+        if (delay > 0)
             // TODO: Delay Message
+            // TODO: Implement getmehome.delay.allowmove permission node
             Bukkit.getScheduler().runTaskLater(plugin, () -> teleportHome(sender, target, home, loc), delay);
         else
             teleportHome(sender, target, home, loc);
    }
 
-    private long delayTeleport(Player sender, OfflinePlayer target) {
-        if (sender == target || plugin.getDelayWhenHomeOther())
+    private int delayTeleport(Player sender, OfflinePlayer target) {
+        // TODO: put permission node string in PSFS
+        if (sender == target || !sender.hasPermission("getmehome.delay.instantother"))
             return plugin.getWarmupDelay(sender);
 
-        return 0L;
+        return 0;
     }
 
     private void teleportHome(Player sender, OfflinePlayer target, String home, Location loc) {

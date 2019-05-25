@@ -23,7 +23,6 @@ import java.util.logging.Level;
 public final class GetMeHome extends JavaPlugin {
     private static GetMeHome instance;
     private HomeStorageAPI storage;
-    private boolean delayWhenHomeOther;
 
     private YamlPermValue limit;
     private YamlPermValue warmup;
@@ -149,7 +148,6 @@ public final class GetMeHome extends JavaPlugin {
         this.limit = new YamlPermValue(YamlConfiguration.loadConfiguration(limitf), "limit");
         this.warmup = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "warmup");
         this.cooldown = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "cooldown");
-        this.delayWhenHomeOther = getConfig().getBoolean(ConfigTool.DELAY_WHEN_HOME_OTHER_NODE, false);
 
         int whr = getConfig().getInt(ConfigTool.WELCOME_HOME_RADIUS_NODE, 4);
         this.welcomeHomeRadiusSquared = whr * whr;
@@ -167,12 +165,8 @@ public final class GetMeHome extends JavaPlugin {
         return limit.calcFor(p).value;
     }
 
-    public boolean getDelayWhenHomeOther() {
-        return delayWhenHomeOther;
-    }
-
     @Deprecated
-    public long getWarmupDelay(Player p) {
+    public int getWarmupDelay(Player p) {
         return warmup.calcFor(p).value;
     }
 
