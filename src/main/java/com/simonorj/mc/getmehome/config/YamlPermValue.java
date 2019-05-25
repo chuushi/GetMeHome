@@ -68,7 +68,7 @@ public class YamlPermValue {
             return new WorldValue(null, ret + v.val);
         }
 
-        return new WorldValue(null, 1);
+        return new WorldValue(null, 0);
     }
 
     public class WorldValue {
