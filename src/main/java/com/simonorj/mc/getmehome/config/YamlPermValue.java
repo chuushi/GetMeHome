@@ -3,7 +3,6 @@ package com.simonorj.mc.getmehome.config;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class YamlPermValue {
@@ -30,7 +29,7 @@ public class YamlPermValue {
                 continue;
 
             for (PermValue.Value v : l.vals) {
-                if (v.worlds != null && !Arrays.asList(v.worlds).contains(w))
+                if (v.worlds != null && !v.worlds.contains(w))
                     continue;
 
                 // This matches
@@ -54,7 +53,7 @@ public class YamlPermValue {
         }
 
         for (PermValue.Value v : defaultValue.vals) {
-            if (v.worlds != null && !Arrays.asList(v.worlds).contains(w))
+            if (v.worlds != null && !v.worlds.contains(w))
                 continue;
 
             if (v.oper == PermValue.Operation.WORLD) {
@@ -72,9 +71,9 @@ public class YamlPermValue {
     }
 
     public class WorldValue {
-        public final String[] worlds;
+        public final List<String> worlds;
         public final int value;
-        private WorldValue(String[] worlds, int value) {
+        private WorldValue(List<String> worlds, int value) {
             this.worlds = worlds;
             this.value = value;
         }

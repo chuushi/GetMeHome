@@ -20,13 +20,13 @@ public class PermValue {
     public static class Value {
         public final int val;
         public final Operation oper;
-        public final String[] worlds;
+        public final List<String> worlds;
 
         private Value(int val) {
             this(val, Operation.SET, null);
         }
 
-        private Value(int val, Operation oper, String[] worlds) {
+        private Value(int val, Operation oper, List<String> worlds) {
             this.val = val;
             this.oper = oper;
             this.worlds = worlds;
@@ -68,11 +68,11 @@ public class PermValue {
     static List<PermValue> toList(ConfigurationSection cs) {
         ArrayList<PermValue> ret = new ArrayList<>();
         for (String perm : cs.getKeys(true)) {
-            if (cs.isInt(perm)
-                    || cs.isList(perm)
-                    || cs.isInt(perm + '.' + VALUE_CHILD_NODE)
-            )
-                continue;
+            if (!cs.isInt(perm)
+                    && !cs.isList(perm)
+                    && !cs.isInt(perm + '.' + VALUE_CHILD_NODE)
+            ) continue;
+
             ret.add(parsePermissionGroup(perm, cs));
         }
         return ret;
@@ -124,7 +124,7 @@ public class PermValue {
         return new Value(
                 val,
                 opString == null ? null : Operation.fromString(opString),
-                worlds
+                worlds == null ? null : Arrays.asList(worlds)
         );
     }
 }
