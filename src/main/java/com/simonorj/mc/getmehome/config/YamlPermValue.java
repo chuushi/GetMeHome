@@ -20,6 +20,10 @@ public class YamlPermValue {
         return config;
     }
 
+    private int noNeg(int n) {
+        return n < 0 ? 0 : n;
+    }
+
     public WorldValue calcFor(Player p) {
         int ret = 0;
         String w = p.getWorld().getName().toLowerCase();
@@ -37,11 +41,11 @@ public class YamlPermValue {
                     case SET:
                         if (v.val == -1)
                             return new WorldValue(null, -1);
-                        return new WorldValue(null, ret + v.val);
+                        return new WorldValue(null, noNeg(ret + v.val));
                     case WORLD:
                         if (v.val == -1)
                             return new WorldValue(v.worlds, -1);
-                        return new WorldValue(v.worlds, ret + v.val);
+                        return new WorldValue(v.worlds, noNeg(ret + v.val));
                     case ADD:
                         ret += v.val;
                         break;
@@ -59,12 +63,12 @@ public class YamlPermValue {
             if (v.oper == PermValue.Operation.WORLD) {
                 if (v.val == -1)
                     return new WorldValue(v.worlds, -1);
-                return new WorldValue(v.worlds, ret + v.val);
+                return new WorldValue(v.worlds, noNeg(ret + v.val));
             }
 
             if (v.val == -1)
                 return new WorldValue(null, -1);
-            return new WorldValue(null, ret + v.val);
+            return new WorldValue(null, noNeg(ret + v.val));
         }
 
         return new WorldValue(null, 0);
