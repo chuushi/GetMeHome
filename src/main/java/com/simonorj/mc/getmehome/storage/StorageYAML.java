@@ -40,6 +40,10 @@ public class StorageYAML implements HomeStorageAPI {
      *       - PITCH
      */
 
+    private String cleanName(String s) {
+        return s.replaceAll("\\.", "-");
+    }
+
     public StorageYAML() {
         if (!homeFile.exists()) {
             plugin.saveResource("homes.yml", false);
@@ -71,7 +75,7 @@ public class StorageYAML implements HomeStorageAPI {
 
     @Override
     public Location getHome(UUID uuid, String name) {
-        ConfigurationSection cs = storage.getConfigurationSection(uuid.toString() + ".h." + name);
+        ConfigurationSection cs = storage.getConfigurationSection(uuid.toString() + ".h." + cleanName(name));
         if (cs == null)
             return null;
 
@@ -98,6 +102,7 @@ public class StorageYAML implements HomeStorageAPI {
 
     @Override
     public boolean setDefaultHome(UUID uuid, String name) {
+        name = cleanName(name);
         updateFlag = true;
 
         if (storage.getConfigurationSection(uuid.toString() + ".h." + name) == null)
@@ -130,7 +135,7 @@ public class StorageYAML implements HomeStorageAPI {
         }
 
         // Overwrite variable (and home name if it existed)
-        cs = cs.createSection(name);
+        cs = cs.createSection(cleanName(name));
         cs.set("w", loc.getWorld().getName());
         List<Double> c = new ArrayList<>();
         c.add(loc.getX());
@@ -155,7 +160,7 @@ public class StorageYAML implements HomeStorageAPI {
 
     @Override
     public boolean deleteHome(UUID uuid, String name) {
-        String path = uuid + ".h." + name;
+        String path = uuid + ".h." + cleanName(name);
         if (!storage.contains(path))
             return false;
         storage.set(path, null);
