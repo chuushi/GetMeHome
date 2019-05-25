@@ -100,10 +100,6 @@ public final class GetMeHome extends JavaPlugin {
         metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", getStorage()::totalHomes));
     }
 
-    public void loadStorage() {
-        storage = new StorageYAML();
-    }
-
     @Override
     public void onDisable() {
         if (storage != null)
@@ -140,7 +136,6 @@ public final class GetMeHome extends JavaPlugin {
         }
     }
 
-
     public void loadConfig() {
         File limitf = new File(getDataFolder(), "limit.yml");
         File delayf = new File(getDataFolder(), "delay.yml");
@@ -156,18 +151,12 @@ public final class GetMeHome extends JavaPlugin {
         this.focusColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_FOCUS_COLOR_NODE, "f"));
     }
 
+    public void loadStorage() {
+        storage = new StorageYAML();
+    }
+
     public HomeStorageAPI getStorage() {
         return storage;
-    }
-
-    @Deprecated
-    public int getSetLimit(Player p) {
-        return limit.calcFor(p).value;
-    }
-
-    @Deprecated
-    public int getWarmupDelay(Player p) {
-        return warmup.calcFor(p).value;
     }
 
     @SuppressWarnings("deprecation")

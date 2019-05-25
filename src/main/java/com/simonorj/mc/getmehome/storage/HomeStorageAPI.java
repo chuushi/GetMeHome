@@ -4,6 +4,7 @@ import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -88,7 +89,19 @@ public interface HomeStorageAPI {
      * @param player Player for UUID
      * @return number of homes
      */
-    int getNumberOfHomes(UUID player);
+    default int getNumberOfHomes(UUID player) {
+        return getNumberOfHomes(player, null);
+    }
+
+    /**
+     * Gets number of homes set by a player.
+     * If worlds is null, it counts total homes from every world.
+     *
+     * @param player Player for UUID
+     * @param worlds World(s) to count homes into
+     * @return number of homes in the specified worlds
+     */
+    int getNumberOfHomes(UUID player, List<String> worlds);
 
     /**
      * Deletes the home of a player.
@@ -100,13 +113,26 @@ public interface HomeStorageAPI {
     boolean deleteHome(UUID player, String name);
 
     /**
-     * Gets a map of every player's homes.
+     * Gets a map of a player's every home(s).
      *
      * @param player Player for UUID
      * @return HashMap of home names to locations.  Empty set if player has no homes.
      * This assumes the specified Player is a valid player, thus it never returns null.
      */
-    Map<String, Location> getAllHomes(UUID player);
+    default Map<String, Location> getAllHomes(UUID player) {
+        return getAllHomes(player, null);
+    }
+
+    /**
+     * Gets a map of a player's every home(s) in specific world(s).
+     * If worlds is null, it counts total homes from every world.
+     *
+     * @param player Player for UUID
+     * @param worlds World(s) to get home information
+     * @return HashMap of home names to locations for the world(s).  Empty set if player has no homes.
+     * This assumes the specified Player is a valid player, thus it never returns null.
+     */
+    Map<String, Location> getAllHomes(UUID player, List<String> worlds);
 
     /**
      * Gets the total number of homes set in the plugin

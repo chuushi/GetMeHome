@@ -31,6 +31,7 @@ public class StorageYAML implements HomeStorageAPI {
      *   d: DEFAULT HOME NAME
      *   h:
      *     HOMENAME:
+     *       w:
      *       c:
      *       - X
      *       - Y
@@ -150,12 +151,26 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public int getNumberOfHomes(UUID uuid) {
-        // Size of configuration
+    public int getNumberOfHomes(UUID uuid, List<String> worlds) {
+        // Number of homes set: size of configuration
         ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         if (cs == null)
             return 0;
-        return cs.getKeys(false).size();
+        if (worlds == null)
+            return cs.getKeys(false).size();
+
+        // If looking for homes in specific worlds
+        int ret = 0;
+        for (String key : cs.getKeys(false)) {
+            String w = cs.getString(key + ".w");
+            if (w == null)
+                continue;
+
+            if (worlds.contains(w.toLowerCase()))
+                ret++;
+        }
+
+        return ret;
     }
 
     @Override
@@ -168,22 +183,26 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public Map<String, Location> getAllHomes(UUID uuid) {
+    public Map<String, Location> getAllHomes(UUID uuid, List<String> worlds) {
         ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         HashMap<String, Location> ret = new HashMap<>();
 
         if (cs == null)
             return ret;
-        for (String n : cs.getKeys(true)) {
+
+        for (String key : cs.getKeys(false)) {
             // Slightly modified version of getHome()
-            ConfigurationSection csh = cs.getConfigurationSection(n);
+            ConfigurationSection csh = cs.getConfigurationSection(key);
             if (csh == null)
+                continue;
+
+            if (worlds != null && worlds.contains(csh.getString("w").toLowerCase()))
                 continue;
 
             Iterator<Double> c = csh.getDoubleList("c").iterator();
             Iterator<Float> y = csh.getFloatList("y").iterator();
 
-            ret.put(n, new Location(
+            ret.put(key, new Location(
                     plugin.getServer().getWorld(csh.getString("w")),
                     c.next(),
                     c.next(),
