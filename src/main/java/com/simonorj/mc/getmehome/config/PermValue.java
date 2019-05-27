@@ -47,6 +47,9 @@ public class PermValue {
         SET, WORLD, ADD, SUB;
 
         private static Operation fromString(String input) {
+            if (input == null)
+                return SET;
+
             switch (input.toLowerCase()) {
                 case "set":
                     return SET;
@@ -121,7 +124,7 @@ public class PermValue {
 
         return new Value(
                 val,
-                opString == null ? null : Operation.fromString(opString),
+                Operation.fromString(opString),
                 worlds == null ? null : Arrays.asList(worlds)
         );
     }
