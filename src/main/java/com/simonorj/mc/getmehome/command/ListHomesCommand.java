@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -58,8 +59,10 @@ public class ListHomesCommand implements TabExecutor {
     }
 
     private void listHomes(CommandSender sender, OfflinePlayer target) {
+        YamlPermValue.WorldValue wv = (target instanceof Player) ? plugin.getLimit().calcFor((Player) target) : null;
+
         // Get home names owned by player
-        Map<String, Location> homes = getStorage().getAllHomes(target.getUniqueId());
+        Map<String, Location> homes = getStorage().getAllHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
         String defaultHome = getStorage().getDefaultHomeName(target.getUniqueId());
 
         Iterator<String> i = homes.keySet().iterator();
@@ -84,10 +87,12 @@ public class ListHomesCommand implements TabExecutor {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
         }
 
+        // TODO: World-based homes
+
         if (target == sender)
-            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), plugin.getSetLimit((Player) target), list.toString()));
+            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), wv.value, list.toString()));
         else if (target instanceof Player)
-            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), homes.size(), plugin.getSetLimit((Player) target), list.toString()));
+            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), homes.size(), wv.value, list.toString()));
         else
             sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), homes.size(), list.toString()));
     }

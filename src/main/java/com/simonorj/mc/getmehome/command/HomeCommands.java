@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,11 +11,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.simonorj.mc.getmehome.MessageTool.error;
 import static com.simonorj.mc.getmehome.MessageTool.prefixed;
@@ -23,7 +22,10 @@ public class HomeCommands implements TabExecutor {
     private static final String OTHER_HOME_PERM = "getmehome.command.home.other";
     private static final String OTHER_SETHOME_PERM = "getmehome.command.sethome.other";
     private static final String OTHER_DELHOME_PERM = "getmehome.command.delhome.other";
+    private static final String DELAY_INSTANTOTHER_PERM = "getmehome.delay.instantother";
     private final GetMeHome plugin;
+
+    private final Map<Player, CooldownTimer> cooldownList = new HashMap<>();
 
     public HomeCommands(GetMeHome plugin) {
         this.plugin = plugin;
@@ -135,22 +137,67 @@ public class HomeCommands implements TabExecutor {
             return;
         }
 
+        // Check if sender is still cooling down
+        CooldownTimer ct = cooldownList.get(sender);
+        if (ct != null) {
+            if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
+                // Cooldown stop
+                sender.sendMessage("Cooldown active, wait " + ct.counter/20.0 + " more seconds"); // TODO: Message
+                return;
+            }
+            else {
+                cooldownList.remove(sender);
+            }
+        }
+
         // Welcome home!
         int delay = delayTeleport(sender, target);
-        if (delay > 0)
-            // TODO: Delay Message
+        if (delay > 0) {
+            sender.sendMessage("Teleporting to '" + home + "' in " + delay / 20.0 + " seconds..."); // TODO: Message
             // TODO: Implement getmehome.delay.allowmove permission node
             Bukkit.getScheduler().runTaskLater(plugin, () -> teleportHome(sender, target, home, loc), delay);
-        else
+        } else {
             teleportHome(sender, target, home, loc);
+        }
    }
 
-    private int delayTeleport(Player sender, OfflinePlayer target) {
-        // TODO: put permission node string in PSFS
-        if (sender == target || !sender.hasPermission("getmehome.delay.instantother"))
-            return plugin.getWarmupDelay(sender);
+    private int delayTeleport(Player sender, OfflinePlayer homeOwner) {
+        if (sender == homeOwner || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
+            YamlPermValue.WorldValue wv = plugin.getWarmup().calcFor(sender);
+
+            return wv.value;
+        }
 
         return 0;
+    }
+
+    // I may want to move this and related stuff into another class
+    private void setupCooldown(Player p) {
+        int time = plugin.getCooldown().calcFor(p).value;
+        if (time == 0)
+            return;
+
+        CooldownTimer tmr = new CooldownTimer(p, time);
+        tmr.runTaskTimerAsynchronously(plugin, 0L, 1L);
+        cooldownList.put(p, tmr);
+    }
+
+    private class CooldownTimer extends BukkitRunnable {
+        Player player;
+        int counter;
+
+        private CooldownTimer(Player p, int counter) {
+            this.player = p;
+            this.counter = counter;
+        }
+
+        @Override
+        public void run() {
+            if (--counter == 0) {
+                cooldownList.remove(player);
+                this.cancel();
+            }
+        }
     }
 
     private void teleportHome(Player sender, OfflinePlayer target, String home, Location loc) {
@@ -163,6 +210,7 @@ public class HomeCommands implements TabExecutor {
         }
 
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
+            setupCooldown(sender);
             if (farAway) {
                 String i18n = "commands.home"
                         + (sender == target ? "" : ".other")
@@ -175,10 +223,13 @@ public class HomeCommands implements TabExecutor {
     }
 
     private void setHome(Player sender, OfflinePlayer target, String home) {
-        int limit = target instanceof Player ? plugin.getSetLimit((Player) target) : -1;
-        int current = getStorage().getNumberOfHomes(target.getUniqueId());
+        YamlPermValue.WorldValue wv = target instanceof Player ? plugin.getLimit().calcFor(sender) : null;
+
+        int current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
+        int limit = wv == null ? -1 : wv.value;
         boolean allow;
         boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
+
         if (limit == -1)
             allow = true;
         else if (homeExists)
