@@ -68,7 +68,7 @@ public class PermValue {
     static List<PermValue> toList(ConfigurationSection cs) {
         ArrayList<PermValue> ret = new ArrayList<>();
         for (String perm : cs.getKeys(true)) {
-            if (!(cs.isInt(perm) && perm.endsWith('.' + VALUE_CHILD_NODE))
+            if ((cs.isInt(perm) && perm.endsWith('.' + VALUE_CHILD_NODE))
                     && !cs.isList(perm)
                     && !cs.isInt(perm + '.' + VALUE_CHILD_NODE)
             ) continue;
