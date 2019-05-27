@@ -196,20 +196,21 @@ public class StorageYAML implements HomeStorageAPI {
             if (csh == null)
                 continue;
 
-            if (worlds != null && worlds.contains(csh.getString("w").toLowerCase()))
-                continue;
+            // If the world is in the list
+            if (worlds == null || worlds.contains(csh.getString("w").toLowerCase())) {
+                Iterator<Double> c = csh.getDoubleList("c").iterator();
+                Iterator<Float> y = csh.getFloatList("y").iterator();
 
-            Iterator<Double> c = csh.getDoubleList("c").iterator();
-            Iterator<Float> y = csh.getFloatList("y").iterator();
+                ret.put(key, new Location(
+                        plugin.getServer().getWorld(csh.getString("w")),
+                        c.next(),
+                        c.next(),
+                        c.next(),
+                        y.next(),
+                        y.next()
+                ));
+            }
 
-            ret.put(key, new Location(
-                    plugin.getServer().getWorld(csh.getString("w")),
-                    c.next(),
-                    c.next(),
-                    c.next(),
-                    y.next(),
-                    y.next()
-            ));
         }
         return ret;
     }
