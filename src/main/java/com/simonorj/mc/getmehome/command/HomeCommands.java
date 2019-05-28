@@ -69,16 +69,22 @@ public class HomeCommands implements TabExecutor {
         else
             home = getStorage().getDefaultHomeName(target.getUniqueId());
 
-        if (cmd.getName().equalsIgnoreCase("home"))
-            home((Player) sender, target, home);
-        else if (cmd.getName().equalsIgnoreCase("sethome"))
+        if (cmd.getName().equalsIgnoreCase("home")) {
+            @SuppressWarnings("SuspiciousMethodCalls") // sender is definitely an instance of Player
+            WarmupTimer wt = warmupMap.get(sender);
+            if (wt == null)
+                home((Player) sender, target, home);
+            else
+                wt.incompleteCancel();
+        } else if (cmd.getName().equalsIgnoreCase("sethome")) {
             setHome((Player) sender, target, home);
-        else if (cmd.getName().equalsIgnoreCase("setdefaulthome"))
+        } else if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
             setDefaultHome((Player) sender, home);
-        else if (cmd.getName().equalsIgnoreCase("delhome"))
+        } else if (cmd.getName().equalsIgnoreCase("delhome")) {
             deleteHome(sender, target, home);
-        else
+        } else {
             return false;
+        }
 
         return true;
     }
@@ -252,9 +258,7 @@ public class HomeCommands implements TabExecutor {
                 Location loc = sender.getLocation();
 
                 if (polledLocation.distanceSquared(loc) >= 0.4) {
-                    this.cancel();
-                    warmupMap.remove(sender);
-                    sender.sendMessage(prefixed("commands.home.warmup.cancel", sender));
+                    incompleteCancel();
                     return;
                 } else {
                     polledLocation = loc;
@@ -264,8 +268,21 @@ public class HomeCommands implements TabExecutor {
             if (--counter == 0) {
                 this.cancel();
                 warmupMap.remove(sender);
-                teleportHome(sender, homeOwner, home, location);
+
+                // Move it back over to main thread
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        teleportHome(sender, homeOwner, home, location);
+                    }
+                }.runTask(plugin);
             }
+        }
+
+        private void incompleteCancel() {
+            this.cancel();
+            warmupMap.remove(sender);
+            sender.sendMessage(prefixed("commands.home.warmup.cancel", sender));
         }
     }
 
