@@ -143,8 +143,7 @@ public class HomeCommands implements TabExecutor {
         CooldownTimer ct = cooldownMap.get(sender);
         if (ct != null) {
             if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
-                // Cooldown stop
-                sender.sendMessage("Cooldown active, wait " + ct.counter/20.0 + " more seconds"); // TODO: Message
+                sender.sendMessage(prefixed("commands.home.cooldown", sender, ct.counter/20.0));
                 return;
             }
             else {
@@ -155,11 +154,11 @@ public class HomeCommands implements TabExecutor {
         // Welcome home!
         int delay = delayTeleport(sender, target);
         if (delay > 0) {
-            sender.sendMessage("Teleporting to '" + home + "' in " + delay / 20.0 + " seconds..."); // TODO: Message
-            WarmupTimer wt = new WarmupTimer(sender, target, home, loc, delay);
+            boolean allowMove = sender.hasPermission(DELAY_ALLOWMOVE_PERM);
+            sender.sendMessage(prefixed("commands.home.warmup" + (allowMove ? "" : ".still"), sender, delay/20.0));
+            WarmupTimer wt = new WarmupTimer(sender, target, home, loc, delay, !allowMove);
             wt.runTaskTimerAsynchronously(plugin, 1L, 1L);
             warmupMap.put(sender, wt);
-
         } else {
             teleportHome(sender, target, home, loc);
         }
@@ -236,13 +235,13 @@ public class HomeCommands implements TabExecutor {
         private int counter;
         private Location polledLocation;
 
-        private WarmupTimer(Player sender, OfflinePlayer homeOwner, String home, Location location, int counter) {
+        private WarmupTimer(Player sender, OfflinePlayer homeOwner, String home, Location location, int counter, boolean checkMovement) {
             this.sender = sender;
             this.homeOwner = homeOwner;
             this.home = home;
             this.location = location;
             this.counter = counter;
-            this.checkMovement = !sender.hasPermission(DELAY_ALLOWMOVE_PERM);
+            this.checkMovement = checkMovement;
 
             this.polledLocation = sender.getLocation();
         }
@@ -255,7 +254,7 @@ public class HomeCommands implements TabExecutor {
                 if (polledLocation.distanceSquared(loc) >= 0.4) {
                     this.cancel();
                     warmupMap.remove(sender);
-                    sender.sendMessage("You moved; teleportation cancelled");// TODO: Message
+                    sender.sendMessage(prefixed("commands.home.warmup.cancel", sender));
                     return;
                 } else {
                     polledLocation = loc;
