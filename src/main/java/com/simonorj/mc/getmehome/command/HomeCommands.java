@@ -23,9 +23,11 @@ public class HomeCommands implements TabExecutor {
     private static final String OTHER_SETHOME_PERM = "getmehome.command.sethome.other";
     private static final String OTHER_DELHOME_PERM = "getmehome.command.delhome.other";
     private static final String DELAY_INSTANTOTHER_PERM = "getmehome.delay.instantother";
+    private static final String DELAY_ALLOWMOVE_PERM = "getmehome.delay.allowmove";
     private final GetMeHome plugin;
 
-    private final Map<Player, CooldownTimer> cooldownList = new HashMap<>();
+    private final Map<Player, CooldownTimer> cooldownMap = new HashMap<>();
+    private final Map<Player, WarmupTimer> warmupMap = new HashMap<>();
 
     public HomeCommands(GetMeHome plugin) {
         this.plugin = plugin;
@@ -138,7 +140,7 @@ public class HomeCommands implements TabExecutor {
         }
 
         // Check if sender is still cooling down
-        CooldownTimer ct = cooldownList.get(sender);
+        CooldownTimer ct = cooldownMap.get(sender);
         if (ct != null) {
             if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
                 // Cooldown stop
@@ -146,7 +148,7 @@ public class HomeCommands implements TabExecutor {
                 return;
             }
             else {
-                cooldownList.remove(sender);
+                cooldownMap.remove(sender);
             }
         }
 
@@ -154,8 +156,10 @@ public class HomeCommands implements TabExecutor {
         int delay = delayTeleport(sender, target);
         if (delay > 0) {
             sender.sendMessage("Teleporting to '" + home + "' in " + delay / 20.0 + " seconds..."); // TODO: Message
-            // TODO: Implement getmehome.delay.allowmove permission node
-            Bukkit.getScheduler().runTaskLater(plugin, () -> teleportHome(sender, target, home, loc), delay);
+            WarmupTimer wt = new WarmupTimer(sender, target, home, loc, delay);
+            wt.runTaskTimerAsynchronously(plugin, 1L, 1L);
+            warmupMap.put(sender, wt);
+
         } else {
             teleportHome(sender, target, home, loc);
         }
@@ -178,8 +182,8 @@ public class HomeCommands implements TabExecutor {
             return;
 
         CooldownTimer tmr = new CooldownTimer(p, time);
-        tmr.runTaskTimerAsynchronously(plugin, 0L, 1L);
-        cooldownList.put(p, tmr);
+        tmr.runTaskTimerAsynchronously(plugin, 1L, 1L);
+        cooldownMap.put(p, tmr);
     }
 
     private class CooldownTimer extends BukkitRunnable {
@@ -194,7 +198,7 @@ public class HomeCommands implements TabExecutor {
         @Override
         public void run() {
             if (--counter == 0) {
-                cooldownList.remove(player);
+                cooldownMap.remove(player);
                 this.cancel();
             }
         }
@@ -219,6 +223,50 @@ public class HomeCommands implements TabExecutor {
             }
         } else {
             sender.sendMessage(error("commands.home.unable", sender, home));
+        }
+    }
+
+    private class WarmupTimer extends BukkitRunnable {
+        private final Player sender;
+        private final OfflinePlayer homeOwner;
+        private final String home;
+        private final Location location;
+        private final boolean checkMovement;
+
+        private int counter;
+        private Location polledLocation;
+
+        private WarmupTimer(Player sender, OfflinePlayer homeOwner, String home, Location location, int counter) {
+            this.sender = sender;
+            this.homeOwner = homeOwner;
+            this.home = home;
+            this.location = location;
+            this.counter = counter;
+            this.checkMovement = !sender.hasPermission(DELAY_ALLOWMOVE_PERM);
+
+            this.polledLocation = sender.getLocation();
+        }
+
+        @Override
+        public void run() {
+            if (checkMovement && counter % 10 == 0) {
+                Location loc = sender.getLocation();
+
+                if (polledLocation.distanceSquared(loc) >= 0.4) {
+                    this.cancel();
+                    warmupMap.remove(sender);
+                    sender.sendMessage("You moved; teleportation cancelled");// TODO: Message
+                    return;
+                } else {
+                    polledLocation = loc;
+                }
+            }
+
+            if (--counter == 0) {
+                this.cancel();
+                warmupMap.remove(sender);
+                teleportHome(sender, homeOwner, home, location);
+            }
         }
     }
 

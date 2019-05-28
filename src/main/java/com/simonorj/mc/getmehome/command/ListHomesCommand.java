@@ -87,7 +87,7 @@ public class ListHomesCommand implements TabExecutor {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
         }
 
-        // TODO: World-based homes
+        // TODO: World-based homes (check if wv.worlds is null)
 
         if (target == sender)
             sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), wv.value, list.toString()));
