@@ -174,6 +174,28 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
+    public Map<String, Integer> getNumberOfHomesPerWorld(UUID uuid, List<String> worlds) {
+        // Number of homes set: size of configuration
+        ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
+        Map<String, Integer> ret = new HashMap<>();
+
+        if (cs == null)
+            return ret;
+
+        for (String key : cs.getKeys(false)) {
+            String w = cs.getString(key + ".w");
+            if (w == null)
+                continue;
+
+            if (worlds == null || worlds.contains(w.toLowerCase())) {
+                ret.merge(w, 1, Integer::sum);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
     public boolean deleteHome(UUID uuid, String name) {
         String path = uuid + ".h." + cleanName(name);
         if (!storage.contains(path))

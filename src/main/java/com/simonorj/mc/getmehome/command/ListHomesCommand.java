@@ -12,6 +12,7 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static com.simonorj.mc.getmehome.MessageTool.*;
@@ -100,15 +101,37 @@ public class ListHomesCommand implements TabExecutor {
         Map<String, Location> homes = getStorage().getAllHomes(target.getUniqueId(), global || wv == null ? null : wv.worlds);
         String defaultHome = getStorage().getDefaultHomeName(target.getUniqueId());
 
-        Iterator<String> i = homes.keySet().iterator();
+        Iterator<Map.Entry<String, Location>> i = homes.entrySet().iterator();
+        AtomicInteger effective = new AtomicInteger(0);
         StringBuilder list;
 
         if (i.hasNext()) {
-            Function<String, String> parse = d -> {
-                if (d.equals(defaultHome))
-                    return ChatColor.BOLD + d + ChatColor.RESET;
-                else
-                    return d;
+            Function<Map.Entry<String, Location>, String> parse = d -> {
+                boolean deductable = false;
+                if (wv != null && wv.deducts != null) {
+                    String world = d.getValue().getWorld().getName().toLowerCase();
+
+                    for (YamlPermValue.WorldValue wvd : wv.deducts) {
+                        if (wvd.value != 0) {
+                            if (wvd.worlds.contains(world)) {
+                                deductable = true;
+                                if (wvd.value != -1)
+                                    wvd.value--;
+                                break;
+                            } else {
+                                effective.incrementAndGet();
+                            }
+                        }
+                    }
+                }
+
+                StringBuilder ret = new StringBuilder();
+                if (d.getKey().equals(defaultHome))
+                    ret.append(ChatColor.BOLD);
+                if (deductable)
+                    ret.append(ChatColor.ITALIC);
+                ret.append(d.getKey()).append(ChatColor.RESET);
+                return ret.toString();
             };
 
             ChatColor f = plugin.getFocusColor();
@@ -122,15 +145,15 @@ public class ListHomesCommand implements TabExecutor {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
         }
 
-        // TODO: World-based homes (check if wv.worlds is null)
-
+        // TODO: Append "Deduct" value to current home count
         Object total = wv == null ? null : wv.worlds != null && global ? "?" : wv.value;
+        Object count = effective.get() == 0 || effective.get() == homes.size() ? homes.size() : effective.get() + "(" + homes.size() + ")";
 
         if (target == sender)
-            sender.sendMessage(prefixed("commands.listhomes.self", sender, homes.size(), total, list.toString()));
+            sender.sendMessage(prefixed("commands.listhomes.self", sender, count, total, list.toString()));
         else if (target instanceof Player)
-            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), homes.size(), total, list.toString()));
+            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), count, total, list.toString()));
         else
-            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), homes.size(), list.toString()));
+            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), count, list.toString()));
     }
 }

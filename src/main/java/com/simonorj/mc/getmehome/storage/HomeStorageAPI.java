@@ -104,6 +104,16 @@ public interface HomeStorageAPI {
     int getNumberOfHomes(UUID player, List<String> worlds);
 
     /**
+     * Gets number of homes set by a player per world.
+     * If worlds is null, it counts total homes from every world.
+     *
+     * @param player Player for UUID
+     * @param worlds World(s) to count homes into
+     * @return map of world and number of homes in each
+     */
+    Map<String, Integer> getNumberOfHomesPerWorld(UUID player, List<String> worlds);
+
+    /**
      * Deletes the home of a player.
      *
      * @param player Player for UUID

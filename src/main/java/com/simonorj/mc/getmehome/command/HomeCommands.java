@@ -289,17 +289,42 @@ public class HomeCommands implements TabExecutor {
     private void setHome(Player sender, OfflinePlayer target, String home) {
         YamlPermValue.WorldValue wv = target instanceof Player ? plugin.getLimit().calcFor(sender) : null;
 
-        int current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
         int limit = wv == null ? -1 : wv.value;
+        int current;
+        int exempt = 0;
+        if (limit == -1) {
+            current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
+        } else {
+            current = 0;
+
+            for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
+                if (wv.deducts != null) {
+                    for (YamlPermValue.WorldValue wvd : wv.deducts) {
+                        if (wvd.value != 0
+                                && wvd.worlds.contains(hpw.getKey())) {
+                            if (wvd.value != -1)
+                                wvd.value--;
+                            exempt++;
+                            break;
+                        } else {
+                            current++;
+                        }
+                    }
+                }
+            }
+        }
+
         boolean allow;
         boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
 
         if (limit == -1)
             allow = true;
-        else if (homeExists)
-            allow = limit >= current;
-        else
-            allow = limit > current;
+        else {
+            if (homeExists)
+                allow = limit >= current;
+            else
+                allow = limit > current;
+        }
 
         if (allow) {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {
@@ -311,6 +336,7 @@ public class HomeCommands implements TabExecutor {
                 sender.sendMessage(error("commands.sethome.badLocation", sender));
             }
         } else {
+            Object now = exempt == 0 ? current : current + "(+" + exempt + ")";
             sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
         }
     }
