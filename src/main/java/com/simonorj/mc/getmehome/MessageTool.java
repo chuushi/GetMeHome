@@ -34,6 +34,11 @@ public class MessageTool {
     }
 
     static void reloadI18n(File i18nFolder) {
+        if (!i18nFolder.isDirectory()) {
+            loader = null;
+            return;
+        }
+
         try {
             URL[] urls = {i18nFolder.toURI().toURL()};
             loader = new URLClassLoader(urls);
