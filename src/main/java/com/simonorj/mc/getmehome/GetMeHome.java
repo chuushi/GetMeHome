@@ -66,7 +66,8 @@ public final class GetMeHome extends JavaPlugin {
         if (!limitf.exists()) saveResource("limit.yml", false);
         if (!delayf.exists()) saveResource("delay.yml", false);
 
-        if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) != ConfigTool.version) {
+        int ver = getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE, -1);
+        if (ver != -1 && ver != ConfigTool.version) {
             ConfigUpgrader.upgradeConfig(this);
         }
 
