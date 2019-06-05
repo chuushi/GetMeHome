@@ -28,6 +28,7 @@ public class YamlPermValue {
             if (!p.hasPermission(l.perm))
                 continue;
 
+            // If the current world does not apply to limits
             if (l.worlds != null && !l.worlds.contains(w)) {
                 if (l.oper == PermValue.Operation.SUB) {
                     deducts.add(new WorldValue(l.worlds, -l.val));
@@ -53,7 +54,6 @@ public class YamlPermValue {
                 case SUB:
                     ret -= l.val;
             }
-            break;
         }
 
         if (defaultValue == -1)
