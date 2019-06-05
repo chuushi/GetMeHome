@@ -147,7 +147,7 @@ public class ListHomesCommand implements TabExecutor {
 
         // TODO: Append "Deduct" value to current home count
         Object total = wv == null ? null : wv.worlds != null && global ? "?" : wv.value;
-        Object count = effective.get() == 0 || effective.get() == homes.size() ? homes.size() : effective.get() + "(" + homes.size() + ")";
+        Object count = effective.get() == 0 || effective.get() == homes.size() ? homes.size() : effective.get() + "(+" + (homes.size() - effective.get()) + ")";
 
         if (target == sender)
             sender.sendMessage(prefixed("commands.listhomes.self", sender, count, total, list.toString()));

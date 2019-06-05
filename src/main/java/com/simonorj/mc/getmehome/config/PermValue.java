@@ -73,7 +73,7 @@ public class PermValue {
         return ret;
     }
 
-    static PermValue parsePermissionGroup(Map<?, ?> m) throws ClassCastException {
+    private static PermValue parsePermissionGroup(Map<?, ?> m) throws ClassCastException {
         String perm = (String) m.get(PERM_LIST_NODE);
         int value = (Integer) m.get(VALUE_LIST_NODE);
         String opString = (String) m.get(OPERATION_LIST_NODE);

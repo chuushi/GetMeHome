@@ -293,15 +293,23 @@ public class HomeCommands implements TabExecutor {
         int current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
         int exempt = 0;
 
+        boolean allow;
+        Location homeLoc = getStorage().getHome(target.getUniqueId(), home);
+        boolean homeExistsNotExempt = homeLoc != null;
+        String homeWorld = homeExistsNotExempt ? homeLoc.getWorld().getName().toLowerCase() : null;
+
         if (limit != -1) {
             for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
                 if (wv.deducts != null) {
                     for (YamlPermValue.WorldValue wvd : wv.deducts) {
-                        if (wvd.value != 0
-                                && wvd.worlds.contains(hpw.getKey())) {
+                        if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
                             if (wvd.value != -1)
                                 wvd.value--;
                             exempt++;
+
+                            if (wvd.worlds.contains(homeWorld))
+                                homeExistsNotExempt = false;
+
                             break;
                         }
                     }
@@ -314,13 +322,10 @@ public class HomeCommands implements TabExecutor {
         plugin.getLogger().info("current home count: " + current);
         plugin.getLogger().info("current exempt count: " + exempt);
 
-        boolean allow;
-        boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
-
         if (limit == -1)
             allow = true;
         else {
-            if (homeExists)
+            if (homeExistsNotExempt)
                 allow = limit >= current;
             else
                 allow = limit > current;
@@ -331,7 +336,7 @@ public class HomeCommands implements TabExecutor {
         if (allow) {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {
                 String i18n = "commands.sethome."
-                        + (homeExists ? "relocate" : "new")
+                        + (homeExistsNotExempt ? "relocate" : "new")
                         + (sender == target ? "" : ".other");
                 sender.sendMessage(preparedMessage(i18n, sender, target, home));
             } else {
@@ -339,7 +344,7 @@ public class HomeCommands implements TabExecutor {
             }
         } else {
             Object now = exempt == 0 ? current : current + "(+" + exempt + ")";
-            sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, current));
+            sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, now));
         }
     }
 
