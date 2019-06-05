@@ -140,6 +140,7 @@ public final class GetMeHome extends JavaPlugin {
         this.prefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]"));
         this.contentColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_CONTENT_COLOR_NODE, "e"));
         this.focusColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_FOCUS_COLOR_NODE, "f"));
+        MessageTool.reloadI18n();
     }
 
     public void loadStorage() {
