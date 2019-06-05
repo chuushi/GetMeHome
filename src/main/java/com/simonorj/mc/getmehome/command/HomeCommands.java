@@ -144,8 +144,8 @@ public class HomeCommands implements TabExecutor {
         if (getStorage().deleteHome(target.getUniqueId(), home)) {
             sender.sendMessage(preparedMessage(
                     sender == target
-                            ? I18n.CMD_DELHOME_OTHER
-                            : I18n.CMD_DELHOME
+                            ? I18n.CMD_DELHOME
+                            : I18n.CMD_DELHOME_OTHER
                     , sender, target, home));
         } else {
             sender.sendMessage(genericHomeFailureMessage(sender, target, home));
@@ -255,23 +255,19 @@ public class HomeCommands implements TabExecutor {
 
         // Calculate count deductions (just have faith in this logic; it looks complicated but it works perfectly)
         if (limit != -1 && wv.deducts != null) {
-            // For each home for counted worlds
+            // For home count in each world
             for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
                 // For each deduction origin
                 for (YamlPermValue.WorldValue wvd : wv.deducts) {
-                    if (wvd.worlds.contains(hpw.getKey())) {
-                        if (wvd.worlds.contains(homeWorld)) {
-                            if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
-                                if (wvd.value != -1)
-                                    wvd.value--;
-                                exempt++;
+                    if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
+                        if (wvd.value != -1)
+                            wvd.value--;
+                        exempt++;
 
-                                if (wvd.worlds.contains(homeWorld))
-                                    notExempt = false;
+                        if (wvd.worlds.contains(homeWorld))
+                            notExempt = false;
 
-                                break;
-                            }
-                        }
+                        break;
                     }
                 }
             }

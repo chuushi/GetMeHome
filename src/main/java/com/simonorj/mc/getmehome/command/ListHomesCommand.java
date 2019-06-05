@@ -101,24 +101,24 @@ public class ListHomesCommand implements TabExecutor {
         String defaultHome = getStorage().getDefaultHomeName(target.getUniqueId());
 
         Iterator<Map.Entry<String, Location>> i = homes.entrySet().iterator();
-        AtomicInteger effective = new AtomicInteger(0);
+        AtomicInteger exempt = new AtomicInteger(0);
         StringBuilder list;
 
         if (i.hasNext()) {
 
             ChatColor f = plugin.getFocusColor();
             ChatColor c = plugin.getContentColor();
-            list = new StringBuilder(homeName(i.next(), wv, effective, defaultHome));
+            list = new StringBuilder(homeName(i.next(), wv, exempt, defaultHome));
 
             while (i.hasNext()) {
-                list.append(c).append(", ").append(f).append(homeName(i.next(), wv, effective, defaultHome));
+                list.append(c).append(", ").append(f).append(homeName(i.next(), wv, exempt, defaultHome));
             }
         } else {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw(I18n.CMD_LISTHOMES_NONE, sender));
         }
 
         Object total = wv == null ? null : wv.worlds != null && global ? "?" : wv.value;
-        Object count = effective.get() == 0 || effective.get() == homes.size() ? homes.size() : effective.get() + "(+" + (homes.size() - effective.get()) + ")";
+        Object count = exempt.get() == 0 ? homes.size() : (homes.size() - exempt.get()) + "(+" + exempt.get() + ")";
 
         if (target == sender)
             sender.sendMessage(prefixed(I18n.CMD_LISTHOMES_SELF, sender, count, total, list.toString()));
@@ -128,20 +128,20 @@ public class ListHomesCommand implements TabExecutor {
             sender.sendMessage(prefixed(I18n.CMD_LISTHOMES_OTHER_OFFLINE, sender, target.getName(), count, list.toString()));
     }
 
-    private String homeName(Map.Entry<String, Location> d, YamlPermValue.WorldValue wv, AtomicInteger effective, String defaultHome) {
+    private String homeName(Map.Entry<String, Location> d, YamlPermValue.WorldValue wv, AtomicInteger exempt, String defaultHome) {
         boolean deductable = false;
         if (wv != null && wv.deducts != null) {
             String world = d.getValue().getWorld().getName().toLowerCase();
 
             for (YamlPermValue.WorldValue wvd : wv.deducts) {
-                if (wvd.value != 0) {
-                    if (wvd.worlds.contains(world)) {
-                        deductable = true;
+                if (wvd.worlds.contains(world)) {
+                    deductable = true;
+
+                    if (wvd.value != 0) {
                         if (wvd.value != -1)
                             wvd.value--;
+                        exempt.incrementAndGet();
                         break;
-                    } else {
-                        effective.incrementAndGet();
                     }
                 }
             }
