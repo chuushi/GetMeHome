@@ -80,6 +80,12 @@ public final class GetMeHome extends JavaPlugin {
     }
 
     private void setupMetrics() {
+        try {
+            Class.forName("com.google.gson.JsonElement");
+        } catch (ClassNotFoundException e) {
+            getLogger().info("Metrics cannot be loaded. You will want to update to MC 1.8+.");
+            return;
+        }
         Metrics metrics = new Metrics(this);
         metrics.addCustomChart(new Metrics.SimplePie("prefixBranding", () -> {
             String pre = getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]");
