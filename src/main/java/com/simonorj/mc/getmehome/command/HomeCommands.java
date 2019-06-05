@@ -1,7 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
-import com.simonorj.mc.getmehome.GetMeHome;
 import com.simonorj.mc.getmehome.DelayTimer;
+import com.simonorj.mc.getmehome.GetMeHome;
 import com.simonorj.mc.getmehome.I18n;
 import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
@@ -13,7 +13,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
@@ -117,6 +116,13 @@ public class HomeCommands implements TabExecutor {
         return Collections.emptyList();
     }
 
+    private void consoleCommand(CommandSender sender, String command) {
+        if (command.equalsIgnoreCase("delhome"))
+            sender.sendMessage("Usage: /delhome <player> <home name>");
+        else
+            sender.sendMessage("You must be a player");
+    }
+
     private void addPlayerNames(List<String> list, String start) {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p.getName().toLowerCase().startsWith(start.toLowerCase())) {
@@ -131,13 +137,6 @@ public class HomeCommands implements TabExecutor {
                 list.add(n);
             }
         }
-    }
-
-    private void consoleCommand(CommandSender sender, String command) {
-        if (command.equalsIgnoreCase("delhome"))
-            sender.sendMessage("Usage: /delhome <player> <home name>");
-        else
-            sender.sendMessage("You must be a player");
     }
 
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
@@ -165,19 +164,11 @@ public class HomeCommands implements TabExecutor {
         }
 
         // Check if sender is still cooling down
-        int coolTick = delayTimer.getCooldown(sender);
-        if (coolTick != 0) {
-            if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
-                sender.sendMessage(prefixed(I18n.CMD_HOME_COOLDOWN, sender, coolTick/20.0));
-                return;
-            }
-            else {
-                delayTimer.cancelCooldown(sender);
-            }
-        }
+        if (isCoolingDown(sender, sender == target))
+            return;
 
         // Welcome home!
-        int delay = delayTeleport(sender, target);
+        int delay = getWarmupDelay(sender, target);
         if (delay > 0) {
             boolean allowMove = sender.hasPermission(DELAY_ALLOWMOVE_PERM);
             sender.sendMessage(prefixed(
@@ -186,20 +177,30 @@ public class HomeCommands implements TabExecutor {
                             : I18n.CMD_HOME_WARMUP_STILL
                     , sender, delay/20.0));
 
-            BukkitRunnable onTime = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    teleportHome(sender, target, home, loc);
-                }
-            };
-
-            delayTimer.newWarmup(sender, delay, !allowMove, onTime); // TODO: Put teleportHome logic here probably by using Runnable() lambda function
+            delayTimer.newWarmup(sender, delay, !allowMove,
+                    () -> teleportHome(sender, target, home, loc),
+                    () -> sender.sendMessage(prefixed(I18n.CMD_HOME_WARMUP_CANCEL, sender))
+            );
         } else {
             teleportHome(sender, target, home, loc);
         }
    }
 
-    private int delayTeleport(Player sender, OfflinePlayer homeOwner) {
+    private boolean isCoolingDown(Player sender, boolean isOwner) {
+        int coolTick = delayTimer.getCooldown(sender);
+
+        if (coolTick > 0) {
+            if (isOwner || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
+                sender.sendMessage(prefixed(I18n.CMD_HOME_COOLDOWN, sender, coolTick / 20.0));
+                return true;
+            } else {
+                delayTimer.cancelCooldown(sender);
+            }
+        }
+        return false;
+    }
+
+    private int getWarmupDelay(Player sender, OfflinePlayer homeOwner) {
         if (sender == homeOwner || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
             YamlPermValue.WorldValue wv = plugin.getWarmup().calcFor(sender);
 

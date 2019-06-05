@@ -7,18 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class YamlPermValue {
-    private final YamlConfiguration config;
     private final List<PermValue> limit;
     private final int defaultValue;
 
     public YamlPermValue(YamlConfiguration config, String sectionName) {
-        this.config = config;
         this.limit = PermValue.parseList(config.getMapList(sectionName));
         this.defaultValue = config.getInt("default." + sectionName);
-    }
-
-    public YamlConfiguration getConfig() {
-        return config;
     }
 
     private int noNeg(int n) {

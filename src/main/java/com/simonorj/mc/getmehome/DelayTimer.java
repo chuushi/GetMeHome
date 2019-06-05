@@ -7,8 +7,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.simonorj.mc.getmehome.MessageTool.prefixed;
-
 public class DelayTimer {
     private final Map<Player, CooldownTimer> cooldownMap = new HashMap<>();
     private final Map<Player, WarmupTimer> warmupMap = new HashMap<>();
@@ -35,17 +33,16 @@ public class DelayTimer {
         return ct.counter;
     }
 
-    public boolean cancelCooldown(Player p) {
+    public void cancelCooldown(Player p) {
         CooldownTimer ct = cooldownMap.remove(p);
         if (ct == null)
-            return false;
+            return;
 
         ct.cancel();
-        return true;
     }
 
-    public void newWarmup(Player p, int counter, boolean checkMovement, BukkitRunnable onTime) {
-        WarmupTimer wt = new WarmupTimer(p, counter, checkMovement, onTime);
+    public void newWarmup(Player p, int counter, boolean checkMovement, Runnable onTime, Runnable onCancel) {
+        WarmupTimer wt = new WarmupTimer(p, counter, checkMovement, onTime, onCancel);
         wt.runTaskTimerAsynchronously(plugin, 1L, 1L);
         warmupMap.put(p, wt);
     }
@@ -82,13 +79,15 @@ public class DelayTimer {
 
         private int counter;
         private Location polledLocation;
-        private BukkitRunnable onTime;
+        private Runnable onTime;
+        private Runnable onCancel;
 
-        private WarmupTimer(Player sender, int counter, boolean checkMovement, BukkitRunnable onTime) {
+        private WarmupTimer(Player sender, int counter, boolean checkMovement, Runnable onTime, Runnable onCancel) {
             this.sender = sender;
             this.counter = counter;
             this.checkMovement = checkMovement;
             this.onTime = onTime;
+            this.onCancel = onCancel;
 
             this.polledLocation = sender.getLocation();
         }
@@ -111,7 +110,7 @@ public class DelayTimer {
                 warmupMap.remove(sender);
 
                 // Move it back over to main thread
-                onTime.runTask(plugin); // TODO: Cleanup this hack
+                plugin.getServer().getScheduler().runTask(plugin, onTime);
                 // A BukkitRunnable was moved out of here back into HomeCommands.
             }
         }
@@ -119,7 +118,7 @@ public class DelayTimer {
         private void incompleteCancel() {
             this.cancel();
             warmupMap.remove(sender);
-            sender.sendMessage(prefixed(I18n.CMD_HOME_WARMUP_CANCEL, sender)); // TODO: Move this out of here?
+            plugin.getServer().getScheduler().runTask(plugin, onCancel);
         }
     }
 }
