@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.config;
 
 import com.google.common.base.Charsets;
+import com.simonorj.mc.getmehome.ConfigTool;
 import com.simonorj.mc.getmehome.GetMeHome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -9,7 +10,17 @@ import java.io.*;
 import java.util.logging.Level;
 
 public class ConfigUpgrader {
-    public static void upTo3() {
+    public static void upgradeConfig(GetMeHome plugin) {
+        // 3: when limit.yml and delay.yml were created
+        if (plugin.getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) < 3) {
+            upTo3();
+        }
+
+        plugin.saveConfig();
+        GetMeHome.getInstance().getLogger().info("Updating configuration to version " + ConfigTool.version);
+    }
+
+    private static void upTo3() {
         final String LIMIT_ROOT = "limit";
         final String DEFAULT = "default";
         final String LIMIT_DEFAULT_NODE = "limit.default";

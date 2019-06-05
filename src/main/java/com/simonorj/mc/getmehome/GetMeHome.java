@@ -64,17 +64,8 @@ public final class GetMeHome extends JavaPlugin {
         if (!limitf.exists()) saveResource("limit.yml", false);
         if (!delayf.exists()) saveResource("delay.yml", false);
 
-        this.limit = new YamlPermValue(YamlConfiguration.loadConfiguration(limitf), "limit");
-        this.warmup = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "warmup");
-        this.cooldown = new YamlPermValue(YamlConfiguration.loadConfiguration(delayf), "cooldown");
-
         if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) != ConfigTool.version) {
-            // 3: when limit.yml and delay.yml were created
-            if (getConfig().getInt(ConfigTool.CONFIG_VERSION_NODE) < 3) {
-                ConfigUpgrader.upTo3();
-            }
-            saveConfig();
-            GetMeHome.getInstance().getLogger().info("Updating configuration to version " + ConfigTool.version);
+            ConfigUpgrader.upgradeConfig(this);
         }
 
         loadConfig();

@@ -17,8 +17,8 @@ public class ConfigTool {
 
     static final String WELCOME_HOME_RADIUS_NODE = "welcome-home-radius";
 
-    static final String CONFIG_VERSION_NODE = "config-version";
-    static final int version = 3;
+    public static final String CONFIG_VERSION_NODE = "config-version";
+    public static final int version = 3;
 
     private static final String HEADER =
             "# GetMeHome by Simon Chuu\n" +

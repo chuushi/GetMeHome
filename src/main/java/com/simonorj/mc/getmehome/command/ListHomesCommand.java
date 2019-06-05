@@ -106,40 +106,13 @@ public class ListHomesCommand implements TabExecutor {
         StringBuilder list;
 
         if (i.hasNext()) {
-            Function<Map.Entry<String, Location>, String> parse = d -> {
-                boolean deductable = false;
-                if (wv != null && wv.deducts != null) {
-                    String world = d.getValue().getWorld().getName().toLowerCase();
-
-                    for (YamlPermValue.WorldValue wvd : wv.deducts) {
-                        if (wvd.value != 0) {
-                            if (wvd.worlds.contains(world)) {
-                                deductable = true;
-                                if (wvd.value != -1)
-                                    wvd.value--;
-                                break;
-                            } else {
-                                effective.incrementAndGet();
-                            }
-                        }
-                    }
-                }
-
-                StringBuilder ret = new StringBuilder();
-                if (d.getKey().equals(defaultHome))
-                    ret.append(ChatColor.BOLD);
-                if (deductable)
-                    ret.append(ChatColor.ITALIC);
-                ret.append(d.getKey()).append(ChatColor.RESET);
-                return ret.toString();
-            };
 
             ChatColor f = plugin.getFocusColor();
             ChatColor c = plugin.getContentColor();
-            list = new StringBuilder(parse.apply(i.next()));
+            list = new StringBuilder(homeName(i.next(), wv, effective, defaultHome));
 
             while (i.hasNext()) {
-                list.append(c).append(", ").append(f).append(parse.apply(i.next()));
+                list.append(c).append(", ").append(f).append(homeName(i.next(), wv, effective, defaultHome));
             }
         } else {
             list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
@@ -155,5 +128,33 @@ public class ListHomesCommand implements TabExecutor {
             sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), count, total, list.toString()));
         else
             sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), count, list.toString()));
+    }
+
+    private String homeName(Map.Entry<String, Location> d, YamlPermValue.WorldValue wv, AtomicInteger effective, String defaultHome) {
+        boolean deductable = false;
+        if (wv != null && wv.deducts != null) {
+            String world = d.getValue().getWorld().getName().toLowerCase();
+
+            for (YamlPermValue.WorldValue wvd : wv.deducts) {
+                if (wvd.value != 0) {
+                    if (wvd.worlds.contains(world)) {
+                        deductable = true;
+                        if (wvd.value != -1)
+                            wvd.value--;
+                        break;
+                    } else {
+                        effective.incrementAndGet();
+                    }
+                }
+            }
+        }
+
+        StringBuilder ret = new StringBuilder();
+        if (d.getKey().equals(defaultHome))
+            ret.append(ChatColor.BOLD);
+        if (deductable)
+            ret.append(ChatColor.ITALIC);
+        ret.append(d.getKey()).append(ChatColor.RESET);
+        return ret.toString();
     }
 }

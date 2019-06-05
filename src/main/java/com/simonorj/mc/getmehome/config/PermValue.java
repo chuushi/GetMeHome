@@ -3,10 +3,12 @@ package com.simonorj.mc.getmehome.config;
 import com.google.common.collect.ImmutableList;
 import com.simonorj.mc.getmehome.GetMeHome;
 import jdk.nashorn.internal.ir.annotations.Immutable;
+import org.bukkit.configuration.InvalidConfigurationException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 @Immutable
 public class PermValue {
@@ -58,47 +60,42 @@ public class PermValue {
         for (Map<?, ?> l : mapList) {
             try {
                 ret.add(parsePermissionGroup(l));
-            } catch (ClassCastException e) {
-                Object p = l.get("perm");
-                if (!(p instanceof String)) {
-                    GetMeHome.getInstance().getLogger().warning("Failed to parse 'perm' to String");
-                } else {
-                    String perm = (String) p;
-                    if (!(l.get("value") instanceof Integer)) {
-                        GetMeHome.getInstance().getLogger().warning("Failed to parse 'value' of " + perm + " to String");
-                    }
-                }
+            } catch (InvalidConfigurationException | ClassCastException e) {
+                GetMeHome.getInstance().getLogger().log(Level.WARNING, "Could not parse a configuration group", e);
             }
         }
         return ret;
     }
 
-    private static PermValue parsePermissionGroup(Map<?, ?> m) throws ClassCastException {
+    private static PermValue parsePermissionGroup(Map<?, ?> m) throws InvalidConfigurationException {
         String perm = (String) m.get(PERM_LIST_NODE);
-        int value = (Integer) m.get(VALUE_LIST_NODE);
-        String opString = (String) m.get(OPERATION_LIST_NODE);
-        List wList = (List) m.get(WORLDS_LIST_NODE);
-
-        // Pares Operation
-        Operation oper = Operation.fromString(opString);
-
-        // Parse worlds
-        List<String> worlds;
-        if (wList != null) {
-            int size = wList.size();
-            if (size == 0) {
-                worlds = null;
-            } else {
-                ImmutableList.Builder<String> worldsBuilder = ImmutableList.builder();
-                for (Object o : wList) {
-                    worldsBuilder.add(((String) o).toLowerCase());
-                }
-                worlds = worldsBuilder.build();
-            }
-        } else {
-            worlds = null;
+        if (perm == null) {
+            throw new InvalidConfigurationException("'perm' is not defined in configuration");
         }
 
+        Integer value = (Integer) m.get(VALUE_LIST_NODE);
+
+        if (value == null) {
+            throw new InvalidConfigurationException("'value' for '" + perm + "' perm is not defined in configuration");
+        }
+
+        Operation oper = Operation.fromString( (String) m.get(OPERATION_LIST_NODE) );
+        List<String> worlds = parseWorlds( (List) m.get(WORLDS_LIST_NODE) );
+
         return new PermValue(perm, value, oper, worlds);
+    }
+    
+    private static List<String> parseWorlds(List wList) {
+        if (wList != null) {
+            if (wList.size() == 0)
+                return null;
+
+            ImmutableList.Builder<String> worldsBuilder = ImmutableList.builder();
+            for (Object o : wList)
+                worldsBuilder.add(((String) o).toLowerCase());
+
+            return worldsBuilder.build();
+        }
+        return null;
     }
 }
