@@ -44,6 +44,7 @@ public class HomeCommands implements TabExecutor {
         OfflinePlayer target;
         boolean otherHome;
 
+        // parse target player
         if ((args.length >= 2) && hasOtherPermission(cmd, sender)) {
             target = plugin.getPlayer(args[0]);
             if (target == null) {
@@ -55,15 +56,12 @@ public class HomeCommands implements TabExecutor {
             target = (Player) sender;
             otherHome = false;
         } else {
-            if (cmd.getName().equalsIgnoreCase("delhome"))
-                sender.sendMessage("Usage: /delhome <player> <home name>");
-            else
-                sender.sendMessage("You must be a player");
+            consoleCommand(sender, cmd.getName());
             return true;
         }
 
+        // parse home name
         String home;
-
         if (args.length >= 2 && otherHome)
             home = args[1];
         else if (args.length != 0)
@@ -71,6 +69,7 @@ public class HomeCommands implements TabExecutor {
         else
             home = getStorage().getDefaultHomeName(target.getUniqueId());
 
+        // Run command
         switch (cmd.getName().toLowerCase()) {
             case "home":
                 home((Player) sender, target, home);
@@ -96,19 +95,11 @@ public class HomeCommands implements TabExecutor {
         if (args.length == 1) {
             List<String> ret = new ArrayList<>();
             if (sender instanceof Player) {
-                for (String n : getStorage().getAllHomes(((Player) sender).getUniqueId()).keySet()) {
-                    if (n.toLowerCase().startsWith(args[0].toLowerCase())) {
-                        ret.add(n);
-                    }
-                }
+                addHomeNames(ret, ((Player) sender).getUniqueId(), args[0]);
             }
 
             if (hasOtherPermission(cmd, sender)) {
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (p.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
-                        ret.add(p.getName());
-                    }
-                }
+                addPlayerNames(ret, args[0]);
             }
             return ret;
         }
@@ -119,15 +110,34 @@ public class HomeCommands implements TabExecutor {
                 return Collections.emptyList();
 
             List<String> ret = new ArrayList<>();
-            for (String n : getStorage().getAllHomes(uuid).keySet()) {
-                if (n.toLowerCase().startsWith(args[1].toLowerCase())) {
-                    ret.add(n);
-                }
-            }
+            addHomeNames(ret, uuid, args[1]);
             return ret;
         }
 
         return Collections.emptyList();
+    }
+
+    private void addPlayerNames(List<String> list, String start) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getName().toLowerCase().startsWith(start.toLowerCase())) {
+                list.add(p.getName());
+            }
+        }
+    }
+
+    private void addHomeNames(List<String> list, UUID uuid, String start) {
+        for (String n : getStorage().getAllHomes(uuid).keySet()) {
+            if (n.toLowerCase().startsWith(start.toLowerCase())) {
+                list.add(n);
+            }
+        }
+    }
+
+    private void consoleCommand(CommandSender sender, String command) {
+        if (command.equalsIgnoreCase("delhome"))
+            sender.sendMessage("Usage: /delhome <player> <home name>");
+        else
+            sender.sendMessage("You must be a player");
     }
 
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
@@ -201,6 +211,8 @@ public class HomeCommands implements TabExecutor {
 
     private void teleportHome(Player sender, OfflinePlayer target, String home, Location loc) {
         boolean farAway;
+
+        // Welcome Home Message Calculator
         if (sender.getWorld() == loc.getWorld()) {
             double dist = loc.distanceSquared(sender.getLocation());
             farAway = dist > plugin.getWelcomeHomeRadiusSquared();
@@ -208,6 +220,7 @@ public class HomeCommands implements TabExecutor {
             farAway = true;
         }
 
+        // Teleporter
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
             if (farAway) {
                 sender.sendMessage(preparedMessage(
@@ -234,48 +247,44 @@ public class HomeCommands implements TabExecutor {
         int current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
         int exempt = 0;
 
-        boolean allow;
         Location homeLoc = getStorage().getHome(target.getUniqueId(), home);
         boolean homeExists = homeLoc != null;
         boolean notExempt = true;
         String homeWorld = homeExists ? homeLoc.getWorld().getName().toLowerCase() : null;
+        boolean allow;
 
-        if (limit != -1) {
+        // Calculate count deductions (just have faith in this logic; it looks complicated but it works perfectly)
+        if (limit != -1 && wv.deducts != null) {
+            // For each home for counted worlds
             for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
-                if (wv.deducts != null) {
-                    for (YamlPermValue.WorldValue wvd : wv.deducts) {
-                        // TODO: When value is 0 does not guarantee home limits rule is observed properly
-                        //  e.g. more than one home set in other dimension when maximum addition is one home there
-                        if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
-                            if (wvd.value != -1)
-                                wvd.value--;
-                            exempt++;
+                // For each deduction origin
+                for (YamlPermValue.WorldValue wvd : wv.deducts) {
+                    if (wvd.worlds.contains(hpw.getKey())) {
+                        if (wvd.worlds.contains(homeWorld)) {
+                            if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
+                                if (wvd.value != -1)
+                                    wvd.value--;
+                                exempt++;
 
-                            if (wvd.worlds.contains(homeWorld))
-                                notExempt = false;
+                                if (wvd.worlds.contains(homeWorld))
+                                    notExempt = false;
 
-                            break;
+                                break;
+                            }
                         }
                     }
                 }
             }
+            current -= exempt;
         }
 
-        current -= exempt;
-
-        plugin.getLogger().info("current home count: " + current);
-        plugin.getLogger().info("current exempt count: " + exempt);
-
+        // Check if to allow home setting
         if (limit == -1)
             allow = true;
-        else {
-            if (homeExists && notExempt)
-                allow = limit >= current;
-            else
-                allow = limit > current;
-        }
-
-        plugin.getLogger().info("Allow? " + allow);
+        else if (homeExists && notExempt)
+            allow = limit >= current;
+        else
+            allow = limit > current;
 
         if (allow) {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {
