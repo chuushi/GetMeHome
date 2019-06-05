@@ -35,7 +35,7 @@ GetMeHome features:
     * Shakespearean English (v1.0.3)
   * Japanese (v1.0.3; by kj_Brooke)
   * Korean (v1.0.1)
-* Custom localization or messages available (how-to work in progress)
+* [Custom localization or messages](https://github.com/SimonOrJ/GetMeHome/wiki/Custom-Messages)
 * A way to go to or edit other player's homes
 
 # Configuration
