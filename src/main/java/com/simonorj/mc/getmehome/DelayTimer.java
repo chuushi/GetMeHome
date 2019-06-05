@@ -119,7 +119,7 @@ public class DelayTimer {
         private void incompleteCancel() {
             this.cancel();
             warmupMap.remove(sender);
-            sender.sendMessage(prefixed("commands.home.warmup.cancel", sender));
+            sender.sendMessage(prefixed(I18n.CMD_HOME_WARMUP_CANCEL, sender)); // TODO: Move this out of here?
         }
     }
 }

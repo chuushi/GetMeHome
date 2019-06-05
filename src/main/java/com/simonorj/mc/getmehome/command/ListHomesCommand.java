@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.I18n;
 import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.ChatColor;
@@ -13,7 +14,6 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import static com.simonorj.mc.getmehome.MessageTool.*;
 
@@ -54,7 +54,7 @@ public class ListHomesCommand implements TabExecutor {
         if (sender.hasPermission(OTHER_PERM) && getName != null) {
             get = plugin.getPlayer(getName);
             if (get == null) {
-                sender.sendMessage(error("commands.generic.player.notFound", sender));
+                sender.sendMessage(error(I18n.CMD_GENERIC_PLAYER_NOT_FOUND, sender));
                 return true;
             }
         } else if (sender instanceof Player) {
@@ -115,19 +115,18 @@ public class ListHomesCommand implements TabExecutor {
                 list.append(c).append(", ").append(f).append(homeName(i.next(), wv, effective, defaultHome));
             }
         } else {
-            list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw("commands.listhomes.none", sender));
+            list = new StringBuilder(ChatColor.ITALIC.toString()).append(raw(I18n.CMD_LISTHOMES_NONE, sender));
         }
 
-        // TODO: Append "Deduct" value to current home count
         Object total = wv == null ? null : wv.worlds != null && global ? "?" : wv.value;
         Object count = effective.get() == 0 || effective.get() == homes.size() ? homes.size() : effective.get() + "(+" + (homes.size() - effective.get()) + ")";
 
         if (target == sender)
-            sender.sendMessage(prefixed("commands.listhomes.self", sender, count, total, list.toString()));
+            sender.sendMessage(prefixed(I18n.CMD_LISTHOMES_SELF, sender, count, total, list.toString()));
         else if (target instanceof Player)
-            sender.sendMessage(prefixed("commands.listhomes.other", sender, target.getName(), count, total, list.toString()));
+            sender.sendMessage(prefixed(I18n.CMD_LISTHOMES_OTHER, sender, target.getName(), count, total, list.toString()));
         else
-            sender.sendMessage(prefixed("commands.listhomes.other.offline", sender, target.getName(), count, list.toString()));
+            sender.sendMessage(prefixed(I18n.CMD_LISTHOMES_OTHER_OFFLINE, sender, target.getName(), count, list.toString()));
     }
 
     private String homeName(Map.Entry<String, Location> d, YamlPermValue.WorldValue wv, AtomicInteger effective, String defaultHome) {

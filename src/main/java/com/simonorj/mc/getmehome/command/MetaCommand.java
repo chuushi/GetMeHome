@@ -2,6 +2,7 @@ package com.simonorj.mc.getmehome.command;
 
 import com.google.common.collect.ImmutableList;
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.I18n;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,8 +35,8 @@ public class MetaCommand implements TabExecutor {
             }
         }
 
-        sender.sendMessage(prefixed("commands.meta.heading", sender, plugin.getDescription().getVersion(), plugin.getDescription().getAuthors().get(0)));
-        sender.sendMessage(prefixed("commands.meta.translated", sender, raw("language.translatedBy", sender)));
+        sender.sendMessage(prefixed(I18n.CMD_META_HEADING, sender, plugin.getDescription().getVersion(), plugin.getDescription().getAuthors().get(0)));
+        sender.sendMessage(prefixed(I18n.CMD_META_TRANSLATED, sender, raw(I18n.LANGUAGE_TRANSLATED_BY, sender)));
         return true;
     }
 

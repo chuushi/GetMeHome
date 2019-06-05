@@ -2,6 +2,7 @@ package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
 import com.simonorj.mc.getmehome.DelayTimer;
+import com.simonorj.mc.getmehome.I18n;
 import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.Bukkit;
@@ -46,7 +47,7 @@ public class HomeCommands implements TabExecutor {
         if ((args.length >= 2) && hasOtherPermission(cmd, sender)) {
             target = plugin.getPlayer(args[0]);
             if (target == null) {
-                sender.sendMessage(error("commands.generic.player.notFound", sender));
+                sender.sendMessage(error(I18n.CMD_GENERIC_PLAYER_NOT_FOUND, sender));
                 return true;
             }
             otherHome = true;
@@ -131,8 +132,11 @@ public class HomeCommands implements TabExecutor {
 
     private void deleteHome(CommandSender sender, OfflinePlayer target, String home) {
         if (getStorage().deleteHome(target.getUniqueId(), home)) {
-            String i18n = "commands.delhome" + (sender == target ? "" : ".other");
-            sender.sendMessage(preparedMessage(i18n, sender, target, home));
+            sender.sendMessage(preparedMessage(
+                    sender == target
+                            ? I18n.CMD_DELHOME_OTHER
+                            : I18n.CMD_DELHOME
+                    , sender, target, home));
         } else {
             sender.sendMessage(genericHomeFailureMessage(sender, target, home));
         }
@@ -154,7 +158,7 @@ public class HomeCommands implements TabExecutor {
         int coolTick = delayTimer.getCooldown(sender);
         if (coolTick != 0) {
             if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
-                sender.sendMessage(prefixed("commands.home.cooldown", sender, coolTick/20.0));
+                sender.sendMessage(prefixed(I18n.CMD_HOME_COOLDOWN, sender, coolTick/20.0));
                 return;
             }
             else {
@@ -166,7 +170,11 @@ public class HomeCommands implements TabExecutor {
         int delay = delayTeleport(sender, target);
         if (delay > 0) {
             boolean allowMove = sender.hasPermission(DELAY_ALLOWMOVE_PERM);
-            sender.sendMessage(prefixed("commands.home.warmup" + (allowMove ? "" : ".still"), sender, delay/20.0));
+            sender.sendMessage(prefixed(
+                    allowMove
+                            ? I18n.CMD_HOME_WARMUP
+                            : I18n.CMD_HOME_WARMUP_STILL
+                    , sender, delay/20.0));
 
             BukkitRunnable onTime = new BukkitRunnable() {
                 @Override
@@ -202,10 +210,11 @@ public class HomeCommands implements TabExecutor {
 
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
             if (farAway) {
-                String i18n = "commands.home"
-                        + (sender == target ? "" : ".other")
-                        + ".success";
-                sender.sendMessage(preparedMessage(i18n, sender, target, home));
+                sender.sendMessage(preparedMessage(
+                        sender == target
+                                ? I18n.CMD_HOME_SUCCESS
+                                : I18n.CMD_HOME_OTHER_SUCCESS
+                        , sender, target, home));
             }
 
             int timer = plugin.getCooldown().calcFor(sender).value;
@@ -213,7 +222,7 @@ public class HomeCommands implements TabExecutor {
                 delayTimer.newCooldown(sender, timer);
 
         } else {
-            sender.sendMessage(error("commands.home.unable", sender, home));
+            sender.sendMessage(error(I18n.CMD_HOME_UNABLE, sender, home));
         }
     }
 
@@ -227,20 +236,23 @@ public class HomeCommands implements TabExecutor {
 
         boolean allow;
         Location homeLoc = getStorage().getHome(target.getUniqueId(), home);
-        boolean homeExistsNotExempt = homeLoc != null;
-        String homeWorld = homeExistsNotExempt ? homeLoc.getWorld().getName().toLowerCase() : null;
+        boolean homeExists = homeLoc != null;
+        boolean notExempt = true;
+        String homeWorld = homeExists ? homeLoc.getWorld().getName().toLowerCase() : null;
 
         if (limit != -1) {
             for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
                 if (wv.deducts != null) {
                     for (YamlPermValue.WorldValue wvd : wv.deducts) {
+                        // TODO: When value is 0 does not guarantee home limits rule is observed properly
+                        //  e.g. more than one home set in other dimension when maximum addition is one home there
                         if (wvd.value != 0 && wvd.worlds.contains(hpw.getKey())) {
                             if (wvd.value != -1)
                                 wvd.value--;
                             exempt++;
 
                             if (wvd.worlds.contains(homeWorld))
-                                homeExistsNotExempt = false;
+                                notExempt = false;
 
                             break;
                         }
@@ -257,7 +269,7 @@ public class HomeCommands implements TabExecutor {
         if (limit == -1)
             allow = true;
         else {
-            if (homeExistsNotExempt)
+            if (homeExists && notExempt)
                 allow = limit >= current;
             else
                 allow = limit > current;
@@ -267,27 +279,40 @@ public class HomeCommands implements TabExecutor {
 
         if (allow) {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {
-                String i18n = "commands.sethome."
-                        + (homeExistsNotExempt ? "relocate" : "new")
-                        + (sender == target ? "" : ".other");
+                I18n i18n;
+
+                if (homeExists) {
+                    if (sender == target)
+                        i18n = I18n.CMD_SETHOME_RELOCATE;
+                    else
+                        i18n = I18n.CMD_SETHOME_RELOCATE_OTHER;
+                } else {
+                    if (sender == target)
+                        i18n = I18n.CMD_SETHOME_NEW;
+                    else
+                        i18n = I18n.CMD_SETHOME_NEW_OTHER;
+                }
+
                 sender.sendMessage(preparedMessage(i18n, sender, target, home));
             } else {
-                sender.sendMessage(error("commands.sethome.badLocation", sender));
+                sender.sendMessage(error(I18n.CMD_SETHOME_BAD_LOCATION, sender));
             }
         } else {
-            Object now = exempt == 0 ? current : current + "(+" + exempt + ")";
-            sender.sendMessage(error("commands.sethome.reachedLimit", sender, limit, now));
+            Object now = exempt == 0
+                    ? current
+                    : current + "(+" + exempt + ")";
+            sender.sendMessage(error(I18n.CMD_SETHOME_REACHED_LIMIT, sender, limit, now));
         }
     }
 
     private void setDefaultHome(Player sender, String home) {
         if (getStorage().setDefaultHome(sender.getUniqueId(), home))
-            sender.sendMessage(prefixed("commands.setdefaulthome", sender, home));
+            sender.sendMessage(prefixed(I18n.CMD_SETDEFAULTHOME, sender, home));
         else
-            sender.sendMessage(error("commands.generic.home.failure", sender, home));
+            sender.sendMessage(error(I18n.CMD_GENERIC_HOME_FAILURE, sender, home));
     }
 
-    private String preparedMessage(String i18n, CommandSender sender, OfflinePlayer target, String home) {
+    private String preparedMessage(I18n i18n, CommandSender sender, OfflinePlayer target, String home) {
         if (sender == target)
             return prefixed(i18n, sender, home);
         else
@@ -296,9 +321,9 @@ public class HomeCommands implements TabExecutor {
 
     private String genericHomeFailureMessage(CommandSender sender, OfflinePlayer target, String home) {
         if (sender == target)
-            return error("commands.generic.home.failure", sender, home);
+            return error(I18n.CMD_GENERIC_HOME_FAILURE, sender, home);
         else
-            return error("commands.generic.home.other.failure", sender, target.getName(), home);
+            return error(I18n.CMD_GENERIC_HOME_OTHER_FAILURE, sender, target.getName(), home);
     }
 
     private boolean hasOtherPermission(Command cmd, CommandSender sender) {

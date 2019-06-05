@@ -11,17 +11,17 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class MessageTool {
-    private static String base(String i18n, Locale locale, Object... args) {
-        String msg = ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n);
+    private static String base(I18n i18n, Locale locale, Object... args) {
+        String msg = ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n.toString());
 
         return String.format(msg, args);
     }
 
-    public static String raw(String i18n, CommandSender p, Object... args) {
+    public static String raw(I18n i18n, CommandSender p, Object... args) {
         return base(i18n, getLocale(p), args);
     }
 
-    public static String prefixed(String i18n, CommandSender p, Object... args) {
+    public static String prefixed(I18n i18n, CommandSender p, Object... args) {
         String pre = GetMeHome.getInstance().getPrefix();
         if (!pre.isEmpty()) pre += ' ';
 
@@ -35,7 +35,7 @@ public class MessageTool {
         return pre + content + base(i18n, getLocale(p), args);
     }
 
-    public static String error(String i18n, CommandSender p, Object... args) {
+    public static String error(I18n i18n, CommandSender p, Object... args) {
         String pre = GetMeHome.getInstance().getPrefix();
         if (!pre.isEmpty()) pre += ' ';
 
