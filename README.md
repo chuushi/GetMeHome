@@ -1,5 +1,5 @@
 # ![Logo](https://www.spigotmc.org/data/resource_icons/66/66257.jpg) GetMeHome
-![Bukkit](https://img.shields.io/badge/bukkit-1.7%20--%201.13.2-brightgreen.svg)
+![Bukkit](https://img.shields.io/badge/bukkit-1.7%20--%201.14-brightgreen.svg)
 [![GitHub All Release Downloads](https://img.shields.io/github/downloads/SimonOrJ/GetMeHome/total.svg?label=github%20downloads)](https://github.com/SimonOrJ/GetMeHome/releases)
 [![GitHub release](https://img.shields.io/github/release/SimonOrJ/GetMeHome.svg)](https://github.com/SimonOrJ/GetMeHome/releases/latest)
 [![GitHub pre-release](https://img.shields.io/github/release-pre/SimonOrJ/GetMeHome.svg?label=pre-release)](https://github.com/SimonOrJ/GetMeHome/releases)
@@ -136,3 +136,5 @@ Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for more information!
 * [Spigot resource link](https://www.spigotmc.org/resources/getmehome.66257/)
 * [BukkitDev resource link](https://dev.bukkit.org/projects/getmehome)
 * [bStats Metrics](https://bstats.org/plugin/bukkit/GetMeHome/)
+
+[![bStats GetMeHome Signature](https://bstats.org/signatures/bukkit/GetMeHome.svg)](https://bstats.org/plugin/bukkit/GetMeHome/)
