@@ -1,6 +1,7 @@
 package com.simonorj.mc.getmehome.command;
 
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.DelayTimer;
 import com.simonorj.mc.getmehome.config.YamlPermValue;
 import com.simonorj.mc.getmehome.storage.HomeStorageAPI;
 import org.bukkit.Bukkit;
@@ -24,13 +25,13 @@ public class HomeCommands implements TabExecutor {
     private static final String OTHER_DELHOME_PERM = "getmehome.command.delhome.other";
     private static final String DELAY_INSTANTOTHER_PERM = "getmehome.delay.instantother";
     private static final String DELAY_ALLOWMOVE_PERM = "getmehome.delay.allowmove";
-    private final GetMeHome plugin;
 
-    private final Map<Player, CooldownTimer> cooldownMap = new HashMap<>();
-    private final Map<Player, WarmupTimer> warmupMap = new HashMap<>();
+    private final DelayTimer delayTimer;
+    private final GetMeHome plugin;
 
     public HomeCommands(GetMeHome plugin) {
         this.plugin = plugin;
+        this.delayTimer = new DelayTimer(plugin);
     }
 
     private HomeStorageAPI getStorage() {
@@ -69,21 +70,21 @@ public class HomeCommands implements TabExecutor {
         else
             home = getStorage().getDefaultHomeName(target.getUniqueId());
 
-        if (cmd.getName().equalsIgnoreCase("home")) {
-            @SuppressWarnings("SuspiciousMethodCalls") // sender is definitely an instance of Player
-            WarmupTimer wt = warmupMap.get(sender);
-            if (wt == null)
+        switch (cmd.getName().toLowerCase()) {
+            case "home":
                 home((Player) sender, target, home);
-            else
-                wt.incompleteCancel();
-        } else if (cmd.getName().equalsIgnoreCase("sethome")) {
-            setHome((Player) sender, target, home);
-        } else if (cmd.getName().equalsIgnoreCase("setdefaulthome")) {
-            setDefaultHome((Player) sender, home);
-        } else if (cmd.getName().equalsIgnoreCase("delhome")) {
-            deleteHome(sender, target, home);
-        } else {
-            return false;
+                break;
+            case "sethome":
+                setHome((Player) sender, target, home);
+                break;
+            case "setdefaulthome":
+                setDefaultHome((Player) sender, home);
+                break;
+            case "delhome":
+                deleteHome(sender, target, home);
+                break;
+            default:
+                return false;
         }
 
         return true;
@@ -138,6 +139,10 @@ public class HomeCommands implements TabExecutor {
     }
 
     private void home(Player sender, OfflinePlayer target, String home) {
+        // If in warmup timer
+        if (delayTimer.cancelWarmup(sender))
+            return;
+
         Location loc = getStorage().getHome(target.getUniqueId(), home);
         // No home
         if (loc == null) {
@@ -146,14 +151,14 @@ public class HomeCommands implements TabExecutor {
         }
 
         // Check if sender is still cooling down
-        CooldownTimer ct = cooldownMap.get(sender);
-        if (ct != null) {
+        int coolTick = delayTimer.getCooldown(sender);
+        if (coolTick != 0) {
             if (sender == target || !sender.hasPermission(DELAY_INSTANTOTHER_PERM)) {
-                sender.sendMessage(prefixed("commands.home.cooldown", sender, ct.counter/20.0));
+                sender.sendMessage(prefixed("commands.home.cooldown", sender, coolTick/20.0));
                 return;
             }
             else {
-                cooldownMap.remove(sender);
+                delayTimer.cancelCooldown(sender);
             }
         }
 
@@ -162,9 +167,15 @@ public class HomeCommands implements TabExecutor {
         if (delay > 0) {
             boolean allowMove = sender.hasPermission(DELAY_ALLOWMOVE_PERM);
             sender.sendMessage(prefixed("commands.home.warmup" + (allowMove ? "" : ".still"), sender, delay/20.0));
-            WarmupTimer wt = new WarmupTimer(sender, target, home, loc, delay, !allowMove);
-            wt.runTaskTimerAsynchronously(plugin, 1L, 1L);
-            warmupMap.put(sender, wt);
+
+            BukkitRunnable onTime = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    teleportHome(sender, target, home, loc);
+                }
+            };
+
+            delayTimer.newWarmup(sender, delay, !allowMove, onTime); // TODO: Put teleportHome logic here probably by using Runnable() lambda function
         } else {
             teleportHome(sender, target, home, loc);
         }
@@ -180,35 +191,6 @@ public class HomeCommands implements TabExecutor {
         return 0;
     }
 
-    // I may want to move this and related stuff into another class
-    private void setupCooldown(Player p) {
-        int time = plugin.getCooldown().calcFor(p).value;
-        if (time == 0)
-            return;
-
-        CooldownTimer tmr = new CooldownTimer(p, time);
-        tmr.runTaskTimerAsynchronously(plugin, 1L, 1L);
-        cooldownMap.put(p, tmr);
-    }
-
-    private class CooldownTimer extends BukkitRunnable {
-        Player player;
-        int counter;
-
-        private CooldownTimer(Player p, int counter) {
-            this.player = p;
-            this.counter = counter;
-        }
-
-        @Override
-        public void run() {
-            if (--counter == 0) {
-                cooldownMap.remove(player);
-                this.cancel();
-            }
-        }
-    }
-
     private void teleportHome(Player sender, OfflinePlayer target, String home, Location loc) {
         boolean farAway;
         if (sender.getWorld() == loc.getWorld()) {
@@ -219,72 +201,22 @@ public class HomeCommands implements TabExecutor {
         }
 
         if (sender.teleport(loc, PlayerTeleportEvent.TeleportCause.COMMAND)) {
-            setupCooldown(sender);
             if (farAway) {
                 String i18n = "commands.home"
                         + (sender == target ? "" : ".other")
                         + ".success";
                 sender.sendMessage(preparedMessage(i18n, sender, target, home));
             }
+
+            int timer = plugin.getCooldown().calcFor(sender).value;
+            if (timer >= 0)
+                delayTimer.newCooldown(sender, timer);
+
         } else {
             sender.sendMessage(error("commands.home.unable", sender, home));
         }
     }
 
-    private class WarmupTimer extends BukkitRunnable {
-        private final Player sender;
-        private final OfflinePlayer homeOwner;
-        private final String home;
-        private final Location location;
-        private final boolean checkMovement;
-
-        private int counter;
-        private Location polledLocation;
-
-        private WarmupTimer(Player sender, OfflinePlayer homeOwner, String home, Location location, int counter, boolean checkMovement) {
-            this.sender = sender;
-            this.homeOwner = homeOwner;
-            this.home = home;
-            this.location = location;
-            this.counter = counter;
-            this.checkMovement = checkMovement;
-
-            this.polledLocation = sender.getLocation();
-        }
-
-        @Override
-        public void run() {
-            if (checkMovement && counter % 10 == 0) {
-                Location loc = sender.getLocation();
-
-                if (polledLocation.distanceSquared(loc) >= 0.4) {
-                    incompleteCancel();
-                    return;
-                } else {
-                    polledLocation = loc;
-                }
-            }
-
-            if (--counter == 0) {
-                this.cancel();
-                warmupMap.remove(sender);
-
-                // Move it back over to main thread
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        teleportHome(sender, homeOwner, home, location);
-                    }
-                }.runTask(plugin);
-            }
-        }
-
-        private void incompleteCancel() {
-            this.cancel();
-            warmupMap.remove(sender);
-            sender.sendMessage(prefixed("commands.home.warmup.cancel", sender));
-        }
-    }
 
     private void setHome(Player sender, OfflinePlayer target, String home) {
         YamlPermValue.WorldValue wv = target instanceof Player ? plugin.getLimit().calcFor(sender) : null;
