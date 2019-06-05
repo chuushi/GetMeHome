@@ -24,7 +24,7 @@ public class MessageTool {
     }
 
     private static String getBundleString(I18n i18n, Locale locale) {
-        if (getLoader() != null) {
+        if (loader != null) {
             try {
                 return ResourceBundle.getBundle("GetMeHome", locale, loader).getString(i18n.toString());
             } catch (NullPointerException | MissingResourceException ignore) {}
@@ -33,20 +33,13 @@ public class MessageTool {
         return ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n.toString());
     }
 
-    private static ClassLoader getLoader() {
-        if (loader != null)
-            return loader;
-
-        reloadI18n();
-        return loader;
-    }
-
-    static void reloadI18n() {
+    static void reloadI18n(File i18nFolder) {
         try {
-            URL[] urls = {new File(GetMeHome.getInstance().getDataFolder(), "i18n").toURI().toURL()};
+            URL[] urls = {i18nFolder.toURI().toURL()};
             loader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            loader = null;
         }
     }
 

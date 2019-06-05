@@ -32,6 +32,7 @@ public final class GetMeHome extends JavaPlugin {
     private ChatColor focusColor;
     private ChatColor contentColor;
     private int welcomeHomeRadiusSquared;
+    private File i18nFolder;
 
     public static GetMeHome getInstance() { return instance; }
     public int getWelcomeHomeRadiusSquared() { return welcomeHomeRadiusSquared; }
@@ -58,6 +59,7 @@ public final class GetMeHome extends JavaPlugin {
         // Get config
         saveDefaultConfig();
 
+        this.i18nFolder = new File(getDataFolder(), "i18n");
         File limitf = new File(getDataFolder(), "limit.yml");
         File delayf = new File(getDataFolder(), "delay.yml");
 
@@ -89,6 +91,15 @@ public final class GetMeHome extends JavaPlugin {
             return "Removed";
         }));
         metrics.addCustomChart(new Metrics.SingleLineChart("totalHomes", getStorage()::totalHomes));
+        metrics.addCustomChart(new Metrics.SimplePie("customMessages", () -> {
+            if (i18nFolder.isDirectory()) {
+                String[] files = i18nFolder.list();
+                if (files != null && files.length > 0) {
+                    return "true";
+                }
+            }
+            return "false";
+        }));
     }
 
     @Override
@@ -140,7 +151,7 @@ public final class GetMeHome extends JavaPlugin {
         this.prefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString(ConfigTool.MESSAGE_PREFIX_NODE, "&6[GetMeHome]"));
         this.contentColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_CONTENT_COLOR_NODE, "e"));
         this.focusColor = ChatColor.getByChar(getConfig().getString(ConfigTool.MESSAGE_FOCUS_COLOR_NODE, "f"));
-        MessageTool.reloadI18n();
+        MessageTool.reloadI18n(i18nFolder);
     }
 
     public void loadStorage() {
