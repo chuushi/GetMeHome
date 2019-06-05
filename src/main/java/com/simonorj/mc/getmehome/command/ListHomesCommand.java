@@ -60,7 +60,6 @@ public class ListHomesCommand implements TabExecutor {
         } else if (sender instanceof Player) {
             get = (Player) sender;
         } else {
-            // When player is not found
             sender.sendMessage("Usage: /listhomes [-global] <player>");
             return true;
         }
