@@ -5,18 +5,10 @@
 # The delay time can be listed in this format:
 # Default operation is "set".
 # #
-#   permission.node1: Time in ticks
-# #
-#   permission.node2:
-#     value:          Time in ticks
-#     operation:      set | world | add | subtract (optional)
-#     worlds:         [world_name(s), ...] (optional)
-# #
-#   permission.node3:
-#     - value:        Time in ticks
-#       operation:    set | world | add | subtract (optional)
-#       worlds:       [world_name(s), ...] (optional)
-#     - (repeat for other worlds... optional)
+#   - perm:         permission.node
+#     value:        Time in ticks
+#     operation:    set | world | add | subtract (optional)
+#     worlds:       [world_name(s), ...] (optional)
 # #
 # ### Permission on top of this list will be checked first! ###
 # 20 ticks = 1 second
@@ -25,22 +17,22 @@ default:
   cooldown: 0
 
 warmup:
-  getmehome.instant: 0
-  getmehome.add1s:
-    value: 20
-    operation: add
-  getmehome.endwarmup:
-    value: 60
-    worlds:
-    - world_the_end
+- perm: getmehome.instant
+  value: 0
+- perm: getmehome.add1s
+  value: 20
+  operation: add
+- perm: getmehome.endwarmup
+  value: 60
+  worlds: [world_the_end]
 
 
 cooldown:
-    getmehome.instant: 0
-    getmehome.add1s:
-      value: 20
-      operation: add
-    getmehome.endcooldown:
-      value: 100
-      worlds:
-      - world_the_end
+- perm: getmehome.instant
+  value: 0
+- perm: getmehome.add1s
+  value: 20
+  operation: add
+- perm: getmehome.endcooldown
+  value: 100
+  worlds: [world_the_end]

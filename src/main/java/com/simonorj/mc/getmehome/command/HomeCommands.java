@@ -290,13 +290,10 @@ public class HomeCommands implements TabExecutor {
         YamlPermValue.WorldValue wv = target instanceof Player ? plugin.getLimit().calcFor(sender) : null;
 
         int limit = wv == null ? -1 : wv.value;
-        int current;
+        int current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
         int exempt = 0;
-        if (limit == -1) {
-            current = getStorage().getNumberOfHomes(target.getUniqueId(), wv == null ? null : wv.worlds);
-        } else {
-            current = 0;
 
+        if (limit != -1) {
             for (Map.Entry<String, Integer> hpw : getStorage().getNumberOfHomesPerWorld(target.getUniqueId(), wv.worlds).entrySet()) {
                 if (wv.deducts != null) {
                     for (YamlPermValue.WorldValue wvd : wv.deducts) {
@@ -306,13 +303,16 @@ public class HomeCommands implements TabExecutor {
                                 wvd.value--;
                             exempt++;
                             break;
-                        } else {
-                            current++;
                         }
                     }
                 }
             }
         }
+
+        current -= exempt;
+
+        plugin.getLogger().info("current home count: " + current);
+        plugin.getLogger().info("current exempt count: " + exempt);
 
         boolean allow;
         boolean homeExists = getStorage().getHome(target.getUniqueId(), home) != null;
@@ -325,6 +325,8 @@ public class HomeCommands implements TabExecutor {
             else
                 allow = limit > current;
         }
+
+        plugin.getLogger().info("Allow? " + allow);
 
         if (allow) {
             if (getStorage().setHome(target.getUniqueId(), home, sender.getLocation())) {

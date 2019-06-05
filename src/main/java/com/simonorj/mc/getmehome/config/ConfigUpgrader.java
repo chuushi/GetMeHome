@@ -39,9 +39,9 @@ public class ConfigUpgrader {
                 if (!cs.isInt(key) || key.equals(DEFAULT))
                     continue;
 
-                data.append("  ")
+                data.append("- perm: ")
                         .append(key)
-                        .append(": ")
+                        .append("\n  value: ")
                         .append(cs.getInt(key))
                         .append('\n');
             }

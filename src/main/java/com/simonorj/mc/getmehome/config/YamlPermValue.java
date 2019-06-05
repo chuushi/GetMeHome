@@ -4,18 +4,17 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class YamlPermValue {
     private final YamlConfiguration config;
     private final List<PermValue> limit;
-    private final PermValue defaultValue;
+    private final int defaultValue;
 
     public YamlPermValue(YamlConfiguration config, String sectionName) {
         this.config = config;
-        this.limit = PermValue.toList(config.getConfigurationSection(sectionName));
-        this.defaultValue = PermValue.parsePermissionGroup(sectionName, config.getConfigurationSection("default"));
+        this.limit = PermValue.parseList(config.getMapList(sectionName));
+        this.defaultValue = config.getInt("default." + sectionName);
     }
 
     public YamlConfiguration getConfig() {
@@ -35,50 +34,37 @@ public class YamlPermValue {
             if (!p.hasPermission(l.perm))
                 continue;
 
-            for (PermValue.Value v : l.vals) {
-                if (v.worlds != null && !v.worlds.contains(w)) {
-                    if (v.oper != PermValue.Operation.SUB)
-                        deducts.add(new WorldValue(v.worlds, v.val));
-                    continue;
+            if (l.worlds != null && !l.worlds.contains(w)) {
+                if (l.oper == PermValue.Operation.SUB) {
+                    deducts.add(new WorldValue(l.worlds, -l.val));
+                } else {
+                    deducts.add(new WorldValue(l.worlds, l.val));
                 }
-
-                // This matches
-                switch (v.oper) {
-                    case SET:
-                        if (v.val == -1)
-                            return new WorldValue(null, -1);
-                        return new WorldValue(null, noNeg(ret + v.val), deducts);
-                    case WORLD:
-                        if (v.val == -1)
-                            return new WorldValue(v.worlds, -1);
-                        return new WorldValue(v.worlds, noNeg(ret + v.val), deducts);
-                    case ADD:
-                        ret += v.val;
-                        break;
-                    case SUB:
-                        ret -= v.val;
-                }
-                break;
-            }
-        }
-
-        for (PermValue.Value v : defaultValue.vals) {
-            if (v.worlds != null && !v.worlds.contains(w))
                 continue;
-
-            if (v.oper == PermValue.Operation.WORLD) {
-                if (v.val == -1)
-                    return new WorldValue(v.worlds, -1);
-                return new WorldValue(v.worlds, noNeg(ret + v.val), deducts);
             }
 
-            if (v.val == -1)
-                return new WorldValue(null, -1);
-            return new WorldValue(null, noNeg(ret + v.val), deducts);
+            // This matches
+            switch (l.oper) {
+                case SET:
+                    if (l.val == -1)
+                        return new WorldValue(null, -1);
+                    return new WorldValue(null, noNeg(ret + l.val), deducts);
+                case WORLD:
+                    if (l.val == -1)
+                        return new WorldValue(l.worlds, -1);
+                    return new WorldValue(l.worlds, noNeg(ret + l.val), deducts);
+                case ADD:
+                    ret += l.val;
+                    break;
+                case SUB:
+                    ret -= l.val;
+            }
+            break;
         }
 
-        // This function will never get here but compiler requires a return statement at the end :I
-        return new WorldValue(null, 0, deducts);
+        if (defaultValue == -1)
+            return new WorldValue(null, -1);
+        return new WorldValue(null, noNeg(ret + defaultValue), deducts);
     }
 
     public class WorldValue {

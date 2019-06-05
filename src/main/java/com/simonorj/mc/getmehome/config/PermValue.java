@@ -1,46 +1,30 @@
 package com.simonorj.mc.getmehome.config;
 
+import com.google.common.collect.ImmutableList;
+import com.simonorj.mc.getmehome.GetMeHome;
 import jdk.nashorn.internal.ir.annotations.Immutable;
-import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@Immutable
 public class PermValue {
-    private static final String VALUE_CHILD_NODE = "value";
-    private static final String OPERATION_CHILD_NODE = "operation";
-    private static final String WORLDS_CHILD_NODE = "worlds";
+    private static final String VALUE_LIST_NODE = "value";
+    private static final String OPERATION_LIST_NODE = "operation";
+    private static final String WORLDS_LIST_NODE = "worlds";
+    public static final String PERM_LIST_NODE = "perm";
 
     public final String perm;
-    public final Value[] vals;
+    public final int val;
+    public final Operation oper;
+    public final List<String> worlds;
 
-    @Immutable
-    public static class Value {
-        public final int val;
-        public final Operation oper;
-        public final List<String> worlds;
-
-        private Value(int val) {
-            this(val, Operation.SET, null);
-        }
-
-        private Value(int val, Operation oper, List<String> worlds) {
-            this.val = val;
-            this.oper = oper;
-            this.worlds = worlds;
-        }
-    }
-
-    private PermValue(String perm, Value val) {
+    private PermValue(String perm, int val, Operation oper, List<String> worlds) {
         this.perm = perm;
-        this.vals = new Value[]{val};
-    }
-
-    private PermValue(String perm, Value[] vals) {
-        this.perm = perm;
-        this.vals = vals;
+        this.val = val;
+        this.oper = oper;
+        this.worlds = worlds;
     }
 
     enum Operation {
@@ -68,64 +52,53 @@ public class PermValue {
         }
     }
 
-    static List<PermValue> toList(ConfigurationSection cs) {
+    static List<PermValue> parseList(List<Map<?, ?>> mapList) {
         ArrayList<PermValue> ret = new ArrayList<>();
-        for (String perm : cs.getKeys(true)) {
-            if (cs.isInt(perm) && !perm.endsWith('.' + VALUE_CHILD_NODE)
-                    || cs.isList(perm)
-                    || cs.isInt(perm + '.' + VALUE_CHILD_NODE)
-            ) ret.add(parsePermissionGroup(perm, cs));
+
+        for (Map<?, ?> l : mapList) {
+            try {
+                ret.add(parsePermissionGroup(l));
+            } catch (ClassCastException e) {
+                Object p = l.get("perm");
+                if (!(p instanceof String)) {
+                    GetMeHome.getInstance().getLogger().warning("Failed to parse 'perm' to String");
+                } else {
+                    String perm = (String) p;
+                    if (!(l.get("value") instanceof Integer)) {
+                        GetMeHome.getInstance().getLogger().warning("Failed to parse 'value' of " + perm + " to String");
+                    }
+                }
+            }
         }
         return ret;
     }
 
-    static PermValue parsePermissionGroup(String perm, ConfigurationSection cs) {
-        if (cs.isInt(perm))
-            return new PermValue(perm, new Value(cs.getInt(perm)));
-        else if (cs.isInt(perm + "." + VALUE_CHILD_NODE))
-            return new PermValue(perm, parseValue(cs.getConfigurationSection(perm)));
-        else if (cs.isList(perm))
-            return new PermValue(perm, parseValues(cs.getMapList(perm)));
-        else
-            return new PermValue(perm, new Value(1));
-    }
+    static PermValue parsePermissionGroup(Map<?, ?> m) throws ClassCastException {
+        String perm = (String) m.get(PERM_LIST_NODE);
+        int value = (Integer) m.get(VALUE_LIST_NODE);
+        String opString = (String) m.get(OPERATION_LIST_NODE);
+        List wList = (List) m.get(WORLDS_LIST_NODE);
 
-    static PermValue.Value[] parseValues(List<Map<?, ?>> configurationSectionList) {
-        // Convert from MapList to Value Array
-        Value[] ret = new Value[configurationSectionList.size()];
-        Arrays.setAll(ret, i -> parseValue(configurationSectionList.get(i)));
-        return ret;
-    }
+        // Pares Operation
+        Operation oper = Operation.fromString(opString);
 
-    static PermValue.Value parseValue(ConfigurationSection configurationSection) {
-        return parseValue(configurationSection.getValues(false));
-    }
-
-    static PermValue.Value parseValue(Map<?, ?> configurationSection) {
-        if (!configurationSection.containsKey(VALUE_CHILD_NODE))
-            return null;
-
-        int val = (Integer) configurationSection.get(VALUE_CHILD_NODE);
-        String opString = (String) configurationSection.get(OPERATION_CHILD_NODE);
-        List wList = (List) configurationSection.get(WORLDS_CHILD_NODE);
-
-        String[] worlds;
+        // Parse worlds
+        List<String> worlds;
         if (wList != null) {
             int size = wList.size();
             if (size == 0) {
                 worlds = null;
             } else {
-                worlds = new String[size];
-                Arrays.setAll(worlds, j -> ((String) wList.get(j)).toLowerCase());
+                ImmutableList.Builder<String> worldsBuilder = ImmutableList.builder();
+                for (Object o : wList) {
+                    worldsBuilder.add(((String) o).toLowerCase());
+                }
+                worlds = worldsBuilder.build();
             }
         } else {
             worlds = null;
         }
 
-        return new Value(
-                val,
-                Operation.fromString(opString),
-                worlds == null ? null : Arrays.asList(worlds)
-        );
+        return new PermValue(perm, value, oper, worlds);
     }
 }
