@@ -1,0 +1,29 @@
+# GetMeHome by Simon Chuu
+# https://github.com/SimonOrJ/GetMeHome/
+# #
+# Home limits (based on custom permission nodes)
+# The limits can be listed in this format:
+# Default operation is "set".
+# #
+#   - perm:         permission.node
+#     value:        Home Limit
+#     operation:    set | world | add (optional)
+#     worlds:       [world_name(s), ...] (optional)
+# #
+#   Operation of "subtract" is not supported for home limits.
+# #
+# ### Permission on top of this list will be checked first! ###
+# Set to -1 for unlimited homes
+default:
+  limit: 1
+
+limit:
+- perm: getmehome.unlimited
+  value: -1
+- perm: getmehome.onemorehome
+  value: 1
+  operation: add
+- perm: getmehome.endhome
+  value: 1
+  operation: add
+  worlds: [world_the_end]

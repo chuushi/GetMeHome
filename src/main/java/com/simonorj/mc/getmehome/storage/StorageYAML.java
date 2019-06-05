@@ -31,6 +31,7 @@ public class StorageYAML implements HomeStorageAPI {
      *   d: DEFAULT HOME NAME
      *   h:
      *     HOMENAME:
+     *       w:
      *       c:
      *       - X
      *       - Y
@@ -39,6 +40,10 @@ public class StorageYAML implements HomeStorageAPI {
      *       - YAW
      *       - PITCH
      */
+
+    private String cleanName(String s) {
+        return s.replaceAll("\\.", "-");
+    }
 
     public StorageYAML() {
         if (!homeFile.exists()) {
@@ -71,7 +76,7 @@ public class StorageYAML implements HomeStorageAPI {
 
     @Override
     public Location getHome(UUID uuid, String name) {
-        ConfigurationSection cs = storage.getConfigurationSection(uuid.toString() + ".h." + name);
+        ConfigurationSection cs = storage.getConfigurationSection(uuid.toString() + ".h." + cleanName(name));
         if (cs == null)
             return null;
 
@@ -98,6 +103,7 @@ public class StorageYAML implements HomeStorageAPI {
 
     @Override
     public boolean setDefaultHome(UUID uuid, String name) {
+        name = cleanName(name);
         updateFlag = true;
 
         if (storage.getConfigurationSection(uuid.toString() + ".h." + name) == null)
@@ -130,7 +136,7 @@ public class StorageYAML implements HomeStorageAPI {
         }
 
         // Overwrite variable (and home name if it existed)
-        cs = cs.createSection(name);
+        cs = cs.createSection(cleanName(name));
         cs.set("w", loc.getWorld().getName());
         List<Double> c = new ArrayList<>();
         c.add(loc.getX());
@@ -145,17 +151,53 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public int getNumberOfHomes(UUID uuid) {
-        // Size of configuration
+    public int getNumberOfHomes(UUID uuid, List<String> worlds) {
+        // Number of homes set: size of configuration
         ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         if (cs == null)
             return 0;
-        return cs.getKeys(false).size();
+        if (worlds == null)
+            return cs.getKeys(false).size();
+
+        // If looking for homes in specific worlds
+        int ret = 0;
+        for (String key : cs.getKeys(false)) {
+            String w = cs.getString(key + ".w");
+            if (w == null)
+                continue;
+
+            if (worlds.contains(w.toLowerCase()))
+                ret++;
+        }
+
+        return ret;
+    }
+
+    @Override
+    public Map<String, Integer> getNumberOfHomesPerWorld(UUID uuid, List<String> worlds) {
+        // Number of homes set: size of configuration
+        ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
+        Map<String, Integer> ret = new HashMap<>();
+
+        if (cs == null)
+            return ret;
+
+        for (String key : cs.getKeys(false)) {
+            String w = cs.getString(key + ".w");
+            if (w == null)
+                continue;
+
+            if (worlds == null || worlds.contains(w.toLowerCase())) {
+                ret.merge(w, 1, Integer::sum);
+            }
+        }
+
+        return ret;
     }
 
     @Override
     public boolean deleteHome(UUID uuid, String name) {
-        String path = uuid + ".h." + name;
+        String path = uuid + ".h." + cleanName(name);
         if (!storage.contains(path))
             return false;
         storage.set(path, null);
@@ -163,29 +205,34 @@ public class StorageYAML implements HomeStorageAPI {
     }
 
     @Override
-    public Map<String, Location> getAllHomes(UUID uuid) {
+    public Map<String, Location> getAllHomes(UUID uuid, List<String> worlds) {
         ConfigurationSection cs = storage.getConfigurationSection(uuid + ".h");
         HashMap<String, Location> ret = new HashMap<>();
 
         if (cs == null)
             return ret;
-        for (String n : cs.getKeys(true)) {
+
+        for (String key : cs.getKeys(false)) {
             // Slightly modified version of getHome()
-            ConfigurationSection csh = cs.getConfigurationSection(n);
+            ConfigurationSection csh = cs.getConfigurationSection(key);
             if (csh == null)
                 continue;
 
-            Iterator<Double> c = csh.getDoubleList("c").iterator();
-            Iterator<Float> y = csh.getFloatList("y").iterator();
+            // If the world is in the list
+            if (worlds == null || worlds.contains(csh.getString("w").toLowerCase())) {
+                Iterator<Double> c = csh.getDoubleList("c").iterator();
+                Iterator<Float> y = csh.getFloatList("y").iterator();
 
-            ret.put(n, new Location(
-                    plugin.getServer().getWorld(csh.getString("w")),
-                    c.next(),
-                    c.next(),
-                    c.next(),
-                    y.next(),
-                    y.next()
-            ));
+                ret.put(key, new Location(
+                        plugin.getServer().getWorld(csh.getString("w")),
+                        c.next(),
+                        c.next(),
+                        c.next(),
+                        y.next(),
+                        y.next()
+                ));
+            }
+
         }
         return ret;
     }

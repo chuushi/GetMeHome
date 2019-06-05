@@ -2,6 +2,7 @@ package com.simonorj.mc.getmehome.command;
 
 import com.google.common.collect.ImmutableList;
 import com.simonorj.mc.getmehome.GetMeHome;
+import com.simonorj.mc.getmehome.I18n;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,15 +35,25 @@ public class MetaCommand implements TabExecutor {
             }
         }
 
-        sender.sendMessage(prefixed("commands.meta.heading", sender, plugin.getDescription().getVersion(), plugin.getDescription().getAuthors().get(0)));
-        sender.sendMessage(prefixed("commands.meta.translated", sender, raw("language.translatedBy", sender)));
+        sender.sendMessage(prefixed(I18n.CMD_META_HEADING, sender, plugin.getDescription().getVersion(), plugin.getDescription().getAuthors().get(0)));
+        sender.sendMessage(prefixed(I18n.CMD_META_TRANSLATED, sender, raw(I18n.LANGUAGE_TRANSLATED_BY, sender)));
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-        if (sender.hasPermission(RELOAD_PERM) && args.length == 1)
-            return ImmutableList.of("reload", "clearcache");
+        if (sender.hasPermission(RELOAD_PERM) && args.length == 1) {
+            ImmutableList.Builder<String> ret = ImmutableList.builder();
+
+            String low = args[0].toLowerCase();
+            if ("reload".startsWith(low))
+                ret.add("reload");
+
+            if ("clearcache".startsWith(low))
+                ret.add("clearcache");
+
+            return ret.build();
+        }
         return ImmutableList.of();
     }
 }

@@ -4,6 +4,7 @@ author: Simon Chuu
 description: Simple home plugin that just gets you home
 main: com.simonorj.mc.getmehome.GetMeHome
 website: http://github.com/SimonOrJ/GetMeHome
+api-version: 1.13
 
 commands:
   getmehome:
@@ -33,9 +34,20 @@ commands:
     permission: getmehome.command.setdefaulthome
 
 permissions:
+  # Reload
   getmehome.reload:
     description: Allows /getmehome reload
     default: op
+
+  # Options
+  getmehome.delay.instantother:
+    description: No delay for /home to other player's home
+    default: op
+  getmehome.delay.allowmove:
+    description: Allows moving while waiting for /home warmup
+    default: false
+
+  # User
   getmehome.user:
     description: Allows the user-level usage of home commands
     default: true
@@ -45,6 +57,8 @@ permissions:
       getmehome.command.listhomes: true
       getmehome.command.sethome: true
       getmehome.command.setdefaulthome: true
+
+  # Commands
   getmehome.command.delhome:
     description: Allows /delhome
   getmehome.command.delhome.other:

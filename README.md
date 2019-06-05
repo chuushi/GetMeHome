@@ -8,24 +8,26 @@
 
 *A straightforward Spigot plugin that gets you home*
 
-There are plenty of home plugins out there, but this plugin was built out of
-necessity for a survival server. I could not find any reliable home plugin to
-rely on for clean database storage that also supports multi-home. Any home
-plugin that I found was either too bloated or too simple. I decided to take it
-on my own, and so, GetMeHome was born.
+**GetMeHome** has all the features you would need for a simple home plugin.
+The configuration is very simple to understand and set up!  This plugin was
+tested to work on Minecraft 1.7 and up, and it will continue being updated to
+be future-proof!
 
-GetMeHome has all the features you would need for a simple home plugin, and the
-configuration is very simple to understand and set up!  It was tested to work on Minecraft
-1.7 and up, and it will continue being updated to be future-proof!
+There are plenty of home plugins out there, but this plugin was built out of
+necessity for a survival server. There was no reliable home plugin to rely on
+for clean storage and messages that also supports multi-home. Any home plugin
+that I found was either too bloated or too simple. I decided to take it on my
+own, and so, GetMeHome was born.
 
 GetMeHome features:
 
 * `/home`, `/sethome`, `/delhome`, and `/listhomes`
-* Support for **multi-home** by declaring custom permission nodes
-* Ability to **change the default home** to go to when running `/home` without any
-  arguments (`/setdefaulthome`)
-* Individual **localization** based on individual **user's Minecraft game
-  language**, currently supporting:
+* Advanced **Multi-home support** by declaring custom permission nodes in
+  `limit.yml`
+  * `/setdefaulthome` to change default home
+* **Warmup and cooldown delay support** by declaring custom permission nodes in
+  `delay.yml`
+* **Localization** based on MC language, officially supporting:
   * English (Default)
     * ɥsᴉꞁᵷuƎ (v1.0.3)
     * LOLCAT (v1.0.0)
@@ -33,6 +35,7 @@ GetMeHome features:
     * Shakespearean English (v1.0.3)
   * Japanese (v1.0.3; by kj_Brooke)
   * Korean (v1.0.1)
+* Custom localization or messages available (how-to work in progress)
 * A way to go to or edit other player's homes
 
 # Configuration
@@ -45,11 +48,24 @@ There are several configuration options that you can set.
   without any hassle!
 * `welcome-home-radius`: *Default: 4.* Distance away from home point to show
   the "Welcome home" message. Can be disabled by setting it to -1.
-* `limit.default`: *Default: 1.* Change the default home limit here.
-* `limit.<permission node>`: Add custom permission nodes and the home limits
-  here!
 
 For additional information, check [`config.yml`](src/main/resources/config.yml).
+
+## `limit.yml` and `delay.yml`
+
+These two files follow the same exact structure.
+
+```yaml
+- perm:         permission.node
+  value:        Home Limit
+  operation:    set | world | add | subtract (optional)
+  worlds:       [world_name(s), ...] (optional)
+```
+
+Home limit in `limit.yml` does not support "subtract" operation.
+
+Examples are shown in [`limit.yml`](src/main/resources/limit.yml) and
+[`delay.yml`](src/main/resources/delay.yml).
 
 ## Commands and Permissions
 
@@ -58,7 +74,7 @@ nodes are listed below.
 
 For additional information, check [`plugin.yml`](src/main/resources/plugin.yml).
 
-### User commands
+### User Commands
 
 Everyone is given these permissions by default.
 
@@ -79,6 +95,13 @@ Everyone is given these permissions by default.
   * `/listhomes`
 * `getmehome.command.setdefaulthome`: Allows changing the default home.
   * `/setdefaulthome <name>`
+
+### Delay Bypass Commands
+
+* `getmehome.delay.instantother`: No delay for /home to other player's home.
+  (default: op)
+* `getmehome.delay.allowmove`: Allows moving while waiting for /home warmup
+  (default: false)
 
 ### Administration Commands
 

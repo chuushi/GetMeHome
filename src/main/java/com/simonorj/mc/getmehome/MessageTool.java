@@ -4,24 +4,55 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public class MessageTool {
-    private static String base(String i18n, Locale locale, Object... args) {
-        String msg = ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n);
+    private static ClassLoader loader = null;
+    private static String base(I18n i18n, Locale locale, Object... args) {
+        String msg = getBundleString(i18n, locale);
 
         return String.format(msg, args);
     }
 
-    public static String raw(String i18n, CommandSender p, Object... args) {
+    private static String getBundleString(I18n i18n, Locale locale) {
+        if (loader != null) {
+            try {
+                return ResourceBundle.getBundle("GetMeHome", locale, loader).getString(i18n.toString());
+            } catch (NullPointerException | MissingResourceException ignore) {}
+        }
+
+        return ResourceBundle.getBundle("i18n.GetMeHome", locale).getString(i18n.toString());
+    }
+
+    static void reloadI18n(File i18nFolder) {
+        if (!i18nFolder.isDirectory()) {
+            loader = null;
+            return;
+        }
+
+        try {
+            URL[] urls = {i18nFolder.toURI().toURL()};
+            loader = new URLClassLoader(urls);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            loader = null;
+        }
+    }
+
+    public static String raw(I18n i18n, CommandSender p, Object... args) {
         return base(i18n, getLocale(p), args);
     }
 
-    public static String prefixed(String i18n, CommandSender p, Object... args) {
+    public static String prefixed(I18n i18n, CommandSender p, Object... args) {
         String pre = GetMeHome.getInstance().getPrefix();
         if (!pre.isEmpty()) pre += ' ';
 
@@ -35,7 +66,7 @@ public class MessageTool {
         return pre + content + base(i18n, getLocale(p), args);
     }
 
-    public static String error(String i18n, CommandSender p, Object... args) {
+    public static String error(I18n i18n, CommandSender p, Object... args) {
         String pre = GetMeHome.getInstance().getPrefix();
         if (!pre.isEmpty()) pre += ' ';
 

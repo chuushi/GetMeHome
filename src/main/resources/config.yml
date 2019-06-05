@@ -22,18 +22,3 @@ message:
 # on /home
 #   Set to -1 to disable "Welcome home" message
 welcome-home-radius: 4
-
-# Home limits (based on custom permission nodes)
-# Set to -1 for unlimited homes
-limit:
-  # default - default home limit. If removed, defaults to 1.
-  default: 1
-
-  # The rest of the home limit can be listed in this format:
-  #   permission.node: maximum number of homes
-  ### Permission on top of this list will be checked first! ###
-  getmehome.twohomes: 2
-
-# Enable metrics for this plugin? (If unsure, leave it as true)
-#   Link to metrics: https://bstats.org/plugin/bukkit/GetMeHome/
-enable-metrics: true

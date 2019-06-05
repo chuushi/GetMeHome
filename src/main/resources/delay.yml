@@ -1,0 +1,38 @@
+# GetMeHome by Simon Chuu
+# https://github.com/SimonOrJ/GetMeHome/
+# #
+# Home warm-up in ticks (based on custom permission nodes)
+# The delay time can be listed in this format:
+# Default operation is "set".
+# #
+#   - perm:         permission.node
+#     value:        Time in ticks
+#     operation:    set | world | add | subtract (optional)
+#     worlds:       [world_name(s), ...] (optional)
+# #
+# ### Permission on top of this list will be checked first! ###
+# 20 ticks = 1 second
+default:
+  warmup: 0
+  cooldown: 0
+
+warmup:
+- perm: getmehome.instant
+  value: 0
+- perm: getmehome.add1s
+  value: 20
+  operation: add
+- perm: getmehome.endwarmup
+  value: 60
+  worlds: [world_the_end]
+
+
+cooldown:
+- perm: getmehome.instant
+  value: 0
+- perm: getmehome.add1s
+  value: 20
+  operation: add
+- perm: getmehome.endcooldown
+  value: 100
+  worlds: [world_the_end]
