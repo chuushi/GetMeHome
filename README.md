@@ -1,4 +1,8 @@
 # ![Logo](https://www.spigotmc.org/data/resource_icons/66/66257.jpg) GetMeHome
+![Bukkit](https://img.shields.io/badge/bukkit-1.7%20--%201.13.2-brightgreen.svg)
+[![GitHub All Release Downloads](https://img.shields.io/github/downloads/SimonOrJ/GetMeHome/total.svg?label=github%20downloads)](https://github.com/SimonOrJ/GetMeHome/releases)
+[![GitHub release](https://img.shields.io/github/release/SimonOrJ/GetMeHome.svg)](https://github.com/SimonOrJ/GetMeHome/releases/latest)
+[![GitHub pre-release](https://img.shields.io/github/release-pre/SimonOrJ/GetMeHome.svg?label=pre-release)](https://github.com/SimonOrJ/GetMeHome/releases)
 [![Build Status](https://travis-ci.org/SimonOrJ/GetMeHome.svg?branch=master)](https://travis-ci.org/SimonOrJ/GetMeHome)
 [![Maintainability](https://api.codeclimate.com/v1/badges/e45a154be37e3eac2375/maintainability)](https://codeclimate.com/github/SimonOrJ/GetMeHome/maintainability)
 
